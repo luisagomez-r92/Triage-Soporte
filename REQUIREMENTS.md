@@ -46,7 +46,7 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
 |---|---|---|
 | Tablero general | Vista kanban: N0, Nivel 1, Nivel 2, Pendiente. Incluye buscador global. | Por columna según nivel |
 | Nivel 1 – Revisión | Vista kanban con una columna por agente de N1. Cada columna lista los casos asignados a esa persona (en revisión y en validación). Los "en espera" (sin asignar) no aparecen aquí — se ven solo en el Tablero general hasta que un agente los toma. | Dentro de cada columna: por hora de asignación al agente (el primero asignado aparece primero) |
-| Nivel 2 – Especialistas | En curso (borde azul) + cola colapsable. | En curso: por hora de asignación. En cola: por prioridad (Critical → Low), y dentro de cada prioridad por hora de escalado |
+| Nivel 2 – Especialistas | Vista de dos columnas: "Escalados" (en cola, esperando ser tomados) y "En curso" (ya tomados por un desarrollador). | Columna "Escalados": por campo Rank de Jira. Columna "En curso": por hora de asignación al desarrollador |
 | Pendiente cliente | Tickets pausados esperando respuesta, con tiempo transcurrido visible. | Por hora en que pasó a pendiente |
 
 ### Columnas del Tablero general
@@ -55,7 +55,7 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
 |---|---|
 | Nivel 0 – Nuevos | Recién creados, sin asignar. FIFO estricto por hora de llegada. |
 | Nivel 1 – Revisión | En atención por N1. Incluye casos en validación (borde verde izq.). |
-| Nivel 2 – Especialistas | En curso (borde azul) y en cola, esta última ordenada por prioridad (Critical → Low) y, dentro de cada prioridad, por hora de escalado. Máx. 3 visibles, resto colapsado ("Ver más"). |
+| Nivel 2 – Especialistas | En curso (borde azul) y en cola, esta última ordenada por el campo Rank de Jira. Máx. 3 visibles, resto colapsado ("Ver más"). *(Esta es la columna única del Tablero general — no confundir con la vista de dos columnas "Escalados"/"En curso" de la pestaña Nivel 2 – Especialistas, ver sección 5).* |
 | Pendiente cliente | Con tiempo sin respuesta visible en la tarjeta. |
 
 ## 5. Funcionalidades principales
@@ -67,6 +67,32 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
   navega automáticamente a la correcta con banner informativo.
 - Tickets colapsados se expanden automáticamente al buscar.
 - Muestra conteo de resultados en tiempo real.
+
+**Vista de dos columnas en Nivel 2 – Especialistas**
+
+- La pestaña "Nivel 2 – Especialistas" se organiza en **dos columnas**, no una lista con
+  sección colapsable como antes:
+  - **Columna "Escalados":** tickets en cola, esperando ser **tomados** (iniciados) por el
+    desarrollador. Orden: por el campo **Rank de Jira** (ver sección 6 y 9 — no recalcular
+    prioridad + hora manualmente, respetar el orden que llega del API).
+  - **Columna "En curso":** tickets ya tomados, en trabajo activo. Borde azul izquierdo
+    (regla de la sección 6). Orden: por hora en que el desarrollador tomó el ticket.
+- **Todo ticket escalado a N2 ya tiene un especialista asignado en Jira desde el momento del
+  escalado**, incluso si aún está en la columna "Escalados" sin tomar. La tarjeta debe
+  mostrar avatar + nombre del responsable en **ambas** columnas — la diferencia entre
+  "Escalados" y "En curso" es si el especialista ya inició el trabajo, no si tiene o no
+  responsable asignado.
+- Cada columna muestra un contador de tickets en su encabezado.
+- El badge de prioridad (Critical/High/Medium/Low) es visible en ambas columnas, ya que
+  aplica a todo ticket de Nivel 2 (sección 6).
+- El colapso de colas largas (sección 5, "Ver N más") aplica dentro de cada columna por
+  separado si supera 3 tickets — no se comparte el límite entre ambas columnas.
+- El buscador global y el panel de detalle desplegable (botón "Ver detalle") aplican igual
+  en ambas columnas, reutilizando el diseño de "Tarjeta de ticket en pestañas de lista"
+  descrito abajo.
+- Un ticket pasa de la columna "Escalados" a "En curso" en el momento en que un desarrollador
+  lo toma — este movimiento debe reflejarse en tiempo real (WebSocket/polling), igual que el
+  resto del tablero.
 
 **Vista kanban por agente en Nivel 1 – Revisión**
 

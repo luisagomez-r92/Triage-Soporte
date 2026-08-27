@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
-import AgentColumn from '../../components/AgentColumn'
 import SearchBar from '../../components/SearchBar'
+import TicketListColumn from '../../components/TicketListColumn'
 import { useSearch } from '../../hooks/useSearch'
 import { MOCK_TICKETS } from '../../lib/mockTickets'
 import type { Ticket, TicketStatus } from '../../types/ticket'
@@ -61,9 +61,9 @@ function NivelUnoRevision() {
 
       <div className="flex gap-4 overflow-x-auto pb-2">
         {columnas.map(({ agente, tickets }) => (
-          <AgentColumn
+          <TicketListColumn
             key={agente}
-            agentName={agente}
+            title={agente}
             tickets={tickets}
             matchedIds={matchedIds}
             expandedTicketId={expandedTicketId}

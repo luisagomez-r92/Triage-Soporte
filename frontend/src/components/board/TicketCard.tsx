@@ -3,12 +3,8 @@ import Avatar from '../Avatar'
 import StatusChip from '../StatusChip'
 import TicketDetailPanel from '../TicketDetailPanel'
 import TicketValidationAlert from '../TicketValidationAlert'
+import { getLeftBorderClass } from '../../lib/ticketBorderColor'
 import type { Ticket } from '../../types/ticket'
-
-const LEFT_BORDER_BY_STATUS: Partial<Record<Ticket['estado'], string>> = {
-  'En validación': 'border-l-verde',
-  'En curso N2': 'border-l-accent',
-}
 
 // 'modal': click en toda la tarjeta abre el modal de detalle (Tablero general).
 // 'panel': solo el botón "Ver detalle" expande un panel inline (N1/N2/Pendiente) —
@@ -24,7 +20,7 @@ interface TicketCardProps {
 }
 
 function TicketCard({ ticket, matchState, detailTrigger }: TicketCardProps) {
-  const leftBorder = LEFT_BORDER_BY_STATUS[ticket.estado] ?? 'border-l-transparent'
+  const leftBorder = getLeftBorderClass(ticket.estado)
   // Regla de negocio (REQUIREMENTS.md §6): "En espera" no tiene historial ni puede
   // abrir ningún detalle (ni modal ni panel).
   const puedeVerDetalle = ticket.estado !== 'En espera'

@@ -106,6 +106,8 @@ export const MOCK_TICKETS: Ticket[] = [
     estado: 'Escalado a N2',
     creadoEn: '2026-08-25T07:00:00',
     prioridad: 'Critical',
+    rank: 'b',
+    responsable: { nombre: 'Santiago Vélez', nivel: 'N2' },
     historial: [
       { estado: 'En espera', fecha: '2026-08-25T07:00:00' },
       { estado: 'En revisión N1', fecha: '2026-08-25T07:20:00' },
@@ -120,6 +122,8 @@ export const MOCK_TICKETS: Ticket[] = [
     estado: 'Escalado a N2',
     creadoEn: '2026-08-25T08:30:00',
     prioridad: 'Medium',
+    rank: 'e',
+    responsable: { nombre: 'Andrea Salcedo', nivel: 'N2' },
     historial: [
       { estado: 'En espera', fecha: '2026-08-25T08:30:00' },
       { estado: 'En revisión N1', fecha: '2026-08-25T09:00:00' },
@@ -133,6 +137,10 @@ export const MOCK_TICKETS: Ticket[] = [
     estado: 'Escalado a N2',
     creadoEn: '2026-08-25T10:00:00',
     prioridad: 'Low',
+    // Rank más bajo que tickets Critical/High: el equipo lo subió manualmente en Jira
+    // a pesar de su prioridad — así se prueba que el orden respeta Rank, no prioridad.
+    rank: 'a',
+    responsable: { nombre: 'Santiago Vélez', nivel: 'N2' },
     historial: [
       { estado: 'En espera', fecha: '2026-08-25T10:00:00' },
       { estado: 'En revisión N1', fecha: '2026-08-25T10:20:00' },
@@ -147,6 +155,8 @@ export const MOCK_TICKETS: Ticket[] = [
     estado: 'Escalado a N2',
     creadoEn: '2026-08-26T06:00:00',
     prioridad: 'High',
+    rank: 'c',
+    responsable: { nombre: 'Andrea Salcedo', nivel: 'N2' },
     historial: [
       { estado: 'En espera', fecha: '2026-08-26T06:00:00' },
       { estado: 'En revisión N1', fecha: '2026-08-26T06:15:00' },
@@ -161,6 +171,8 @@ export const MOCK_TICKETS: Ticket[] = [
     estado: 'Escalado a N2',
     creadoEn: '2026-08-25T16:00:00',
     prioridad: 'Medium',
+    rank: 'd',
+    responsable: { nombre: 'Santiago Vélez', nivel: 'N2' },
     historial: [
       { estado: 'En espera', fecha: '2026-08-25T16:00:00' },
       { estado: 'En revisión N1', fecha: '2026-08-25T16:30:00' },
@@ -194,6 +206,34 @@ export const MOCK_TICKETS: Ticket[] = [
       { estado: 'En espera', fecha: '2026-08-25T07:30:00' },
       { estado: 'En revisión N1', fecha: '2026-08-25T08:00:00' },
       { estado: 'Pendiente cliente', fecha: '2026-08-25T18:00:00' },
+    ],
+  },
+  {
+    id: 'FK-0948',
+    titulo: 'Necesita confirmar el NIT de facturación',
+    solicitante: 'Camilo Restrepo',
+    empresa: 'Restrepo & Cía',
+    estado: 'Pendiente cliente',
+    creadoEn: '2026-08-26T06:00:00',
+    responsable: { nombre: 'Laura Pérez', nivel: 'N1' },
+    historial: [
+      { estado: 'En espera', fecha: '2026-08-26T06:00:00' },
+      { estado: 'En revisión N1', fecha: '2026-08-26T06:20:00' },
+      { estado: 'Pendiente cliente', fecha: '2026-08-26T07:30:00' },
+    ],
+  },
+  {
+    id: 'FK-0951',
+    titulo: 'Requiere evidencia de pago para continuar el proceso',
+    solicitante: 'Isabel Nova',
+    empresa: 'Nova Exportaciones',
+    estado: 'Pendiente cliente',
+    creadoEn: '2026-08-22T10:00:00',
+    responsable: { nombre: 'Santiago Vélez', nivel: 'N2' },
+    historial: [
+      { estado: 'En espera', fecha: '2026-08-22T10:00:00' },
+      { estado: 'En revisión N1', fecha: '2026-08-22T10:30:00' },
+      { estado: 'Pendiente cliente', fecha: '2026-08-23T09:00:00' },
     ],
   },
 ]

@@ -1,8 +1,11 @@
 import Avatar from './Avatar'
+import PriorityBadge from './PriorityBadge'
 import ProgressBar from './ProgressBar'
 import StatusChip from './StatusChip'
 import TicketDetailPanel from './TicketDetailPanel'
 import TicketValidationAlert from './TicketValidationAlert'
+import TicketWaitingTime from './TicketWaitingTime'
+import { getLeftBorderClass } from '../lib/ticketBorderColor'
 import { PROGRESS_BY_STATUS } from '../lib/ticketProgress'
 import { formatTime } from '../lib/time'
 import type { Ticket } from '../types/ticket'
@@ -28,13 +31,23 @@ function TicketListCard({ ticket, expanded, onToggle }: TicketListCardProps) {
   const percent = PROGRESS_BY_STATUS[ticket.estado]
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4">
+    <div
+      className={`rounded-lg border border-l-4 border-gray-200 bg-white p-4 ${getLeftBorderClass(
+        ticket.estado,
+      )}`}
+    >
       <p className="text-xs text-gray-400">{metaLine}</p>
       <p className="mt-1 font-semibold text-navy">{ticket.titulo}</p>
       <p className="mt-0.5 text-sm text-gray-600">
         {ticket.solicitante}
         {ticket.empresa && ` - ${ticket.empresa}`}
       </p>
+
+      {ticket.estado === 'Pendiente cliente' && (
+        <div className="mt-1">
+          <TicketWaitingTime ticket={ticket} />
+        </div>
+      )}
 
       <div className="mt-3 flex items-center gap-2">
         <div className="flex-1">
@@ -43,8 +56,9 @@ function TicketListCard({ ticket, expanded, onToggle }: TicketListCardProps) {
         <span className="text-xs text-gray-400">{percent}%</span>
       </div>
 
-      <div className="mt-3">
+      <div className="mt-3 flex items-center gap-2">
         <StatusChip estado={ticket.estado} variant="discreet" />
+        {ticket.prioridad && <PriorityBadge prioridad={ticket.prioridad} />}
       </div>
 
       <div className="mt-3 flex items-center justify-between">

@@ -32,4 +32,7 @@ export interface Ticket {
   responsable?: TicketResponsable
   // Ausente en tickets "En espera" — regla de negocio: sin historial (REQUIREMENTS.md §6).
   historial?: TicketHistoryEntry[]
+  // Campo Rank de Jira (LexoRank) — solo relevante en la cola de "Escalado a N2".
+  // Se compara lexicográficamente tal cual, nunca se recalcula (REQUIREMENTS.md §6, §9).
+  rank?: string
 }
