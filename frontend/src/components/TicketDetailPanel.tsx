@@ -1,5 +1,6 @@
 import Avatar from './Avatar'
 import LevelBadge from './LevelBadge'
+import PendienteClienteAlertCard from './PendienteClienteAlertCard'
 import TicketHistoryTimeline from './TicketHistoryTimeline'
 import TimeElapsedCard from './TimeElapsedCard'
 import { formatDuration } from '../lib/time'
@@ -12,15 +13,22 @@ interface TicketDetailPanelProps {
 function TicketDetailPanel({ ticket }: TicketDetailPanelProps) {
   const estadoActualDesde = ticket.historial?.at(-1)?.fecha ?? ticket.creadoEn
   // "Tiempo en estado actual" y "tiempo sin respuesta" son el mismo dato para un
-  // ticket "Pendiente cliente" (REQUIREMENTS.md §6): mismo cálculo, etiqueta más clara.
-  const estadoActualLabel =
-    ticket.estado === 'Pendiente cliente' ? 'Sin respuesta' : 'Tiempo en estado actual'
+  // ticket "Pendiente cliente" (REQUIREMENTS.md §6): mismo cálculo. Para ese estado, la
+  // segunda tarjeta se reemplaza por la alerta escalonada de REQUIREMENTS.md §5.
+  const isPendienteCliente = ticket.estado === 'Pendiente cliente'
 
   return (
     <div className="flex flex-col gap-3">
       <div className="grid grid-cols-2 gap-3">
         <TimeElapsedCard label="Tiempo total" value={formatDuration(ticket.creadoEn)} />
-        <TimeElapsedCard label={estadoActualLabel} value={formatDuration(estadoActualDesde)} />
+        {isPendienteCliente ? (
+          <PendienteClienteAlertCard pendienteDesde={estadoActualDesde} />
+        ) : (
+          <TimeElapsedCard
+            label="Tiempo en estado actual"
+            value={formatDuration(estadoActualDesde)}
+          />
+        )}
       </div>
 
       {ticket.responsable && (

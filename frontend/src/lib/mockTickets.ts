@@ -1,5 +1,12 @@
 import type { Ticket } from '../types/ticket'
 
+// Timestamp relativo a "ahora" — usado por los tickets "Pendiente cliente" para que los
+// 4 rangos de REQUIREMENTS.md §5 sigan siendo válidos sin importar cuándo se cargue el
+// prototipo (a diferencia de los timestamps fijos del resto de este archivo).
+function hace(horas: number): string {
+  return new Date(Date.now() - horas * 60 * 60 * 1000).toISOString()
+}
+
 export const MOCK_TICKETS: Ticket[] = [
   // Nivel 0 – Nuevos (sin historial: regla de negocio REQUIREMENTS.md §6)
   {
@@ -218,19 +225,23 @@ export const MOCK_TICKETS: Ticket[] = [
     ],
   },
 
-  // Pendiente cliente
+  // Pendiente cliente — timestamps relativos a "ahora" (no fijos) para cubrir los 4
+  // rangos de REQUIREMENTS.md §5 "Alerta de tiempo crítico en Pendiente cliente" más el
+  // caso vencido, sin importar cuándo se abra la app.
   {
     id: 'ST-0940',
     titulo: 'Falta soporte de la operación para continuar el trámite',
     solicitante: 'Esteban Duarte',
     empresa: 'Duarte Comercial',
     estado: 'Pendiente cliente',
-    creadoEn: '2026-08-24T09:00:00',
-    responsable: { nombre: 'Laura Pérez', nivel: 'N1' },
+    creadoEn: hace(4),
+    // Sin `nivel`: "Pendiente cliente" es ambiguo sin historial de nivel — REQUIREMENTS.md §9.
+    responsable: { nombre: 'Laura Pérez' },
     historial: [
-      { estado: 'En espera', fecha: '2026-08-24T09:00:00' },
-      { estado: 'En revisión N1', fecha: '2026-08-24T09:30:00' },
-      { estado: 'Pendiente cliente', fecha: '2026-08-25T11:00:00' },
+      { estado: 'En espera', fecha: hace(4) },
+      { estado: 'En revisión N1', fecha: hace(3.5) },
+      // 0h-8h: naranja normal.
+      { estado: 'Pendiente cliente', fecha: hace(2) },
     ],
   },
   {
@@ -238,12 +249,13 @@ export const MOCK_TICKETS: Ticket[] = [
     titulo: 'Verificación de identidad pendiente',
     solicitante: 'Natalia Bravo',
     estado: 'Pendiente cliente',
-    creadoEn: '2026-08-25T07:30:00',
-    responsable: { nombre: 'Santiago Vélez', nivel: 'N2' },
+    creadoEn: hace(12),
+    responsable: { nombre: 'Santiago Vélez' },
     historial: [
-      { estado: 'En espera', fecha: '2026-08-25T07:30:00' },
-      { estado: 'En revisión N1', fecha: '2026-08-25T08:00:00' },
-      { estado: 'Pendiente cliente', fecha: '2026-08-25T18:00:00' },
+      { estado: 'En espera', fecha: hace(12) },
+      { estado: 'En revisión N1', fecha: hace(11) },
+      // 8h-16h: naranja negrita.
+      { estado: 'Pendiente cliente', fecha: hace(10) },
     ],
   },
   {
@@ -252,12 +264,13 @@ export const MOCK_TICKETS: Ticket[] = [
     solicitante: 'Camilo Restrepo',
     empresa: 'Restrepo & Cía',
     estado: 'Pendiente cliente',
-    creadoEn: '2026-08-26T06:00:00',
-    responsable: { nombre: 'Laura Pérez', nivel: 'N1' },
+    creadoEn: hace(20),
+    responsable: { nombre: 'Laura Pérez' },
     historial: [
-      { estado: 'En espera', fecha: '2026-08-26T06:00:00' },
-      { estado: 'En revisión N1', fecha: '2026-08-26T06:20:00' },
-      { estado: 'Pendiente cliente', fecha: '2026-08-26T07:30:00' },
+      { estado: 'En espera', fecha: hace(20) },
+      { estado: 'En revisión N1', fecha: hace(19) },
+      // 16h-22h: rojo alerta + ícono ⚠️.
+      { estado: 'Pendiente cliente', fecha: hace(18) },
     ],
   },
   {
@@ -266,12 +279,28 @@ export const MOCK_TICKETS: Ticket[] = [
     solicitante: 'Isabel Nova',
     empresa: 'Nova Exportaciones',
     estado: 'Pendiente cliente',
-    creadoEn: '2026-08-22T10:00:00',
-    responsable: { nombre: 'Santiago Vélez', nivel: 'N2' },
+    creadoEn: hace(25),
+    responsable: { nombre: 'Santiago Vélez' },
     historial: [
-      { estado: 'En espera', fecha: '2026-08-22T10:00:00' },
-      { estado: 'En revisión N1', fecha: '2026-08-22T10:30:00' },
-      { estado: 'Pendiente cliente', fecha: '2026-08-23T09:00:00' },
+      { estado: 'En espera', fecha: hace(25) },
+      { estado: 'En revisión N1', fecha: hace(24.5) },
+      // 22h-24h: rojo alerta + negrita + "Se cierra pronto".
+      { estado: 'Pendiente cliente', fecha: hace(23) },
+    ],
+  },
+  {
+    id: 'ST-0953',
+    titulo: 'Cliente no responde solicitud de comprobante de pago',
+    solicitante: 'Roberto Salazar',
+    empresa: 'Salazar Trading',
+    estado: 'Pendiente cliente',
+    creadoEn: hace(28),
+    responsable: { nombre: 'Laura Pérez' },
+    historial: [
+      { estado: 'En espera', fecha: hace(28) },
+      { estado: 'En revisión N1', fecha: hace(27.5) },
+      // >24h: vencido — "Tiempo de respuesta vencido" en vez de la cuenta regresiva.
+      { estado: 'Pendiente cliente', fecha: hace(26) },
     ],
   },
 ]

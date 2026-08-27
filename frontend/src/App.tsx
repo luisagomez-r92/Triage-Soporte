@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import LastUpdatedIndicator from './components/LastUpdatedIndicator'
 import Tabs from './components/Tabs'
 import TableroGeneral from './features/tablero/TableroGeneral'
 import NivelUnoRevision from './features/n1/NivelUnoRevision'
@@ -17,7 +18,8 @@ const TABS: { id: TabId; label: string }[] = [
 
 function App() {
   const [activeTab, setActiveTab] = useState<TabId>('tablero')
-  const { tickets, loading, error, refetch } = useTickets()
+  const { tickets, loading, error, isRefreshing, refreshError, lastUpdatedAt, refetch } =
+    useTickets()
 
   return (
     <div className="min-h-screen bg-fondo">
@@ -26,6 +28,14 @@ function App() {
         activeTabId={activeTab}
         onChange={(id) => setActiveTab(id as TabId)}
       />
+
+      <div className="flex justify-end px-4 py-1">
+        <LastUpdatedIndicator
+          lastUpdatedAt={lastUpdatedAt}
+          isRefreshing={isRefreshing}
+          refreshError={refreshError}
+        />
+      </div>
 
       {loading && (
         <div className="p-6 text-sm text-gray-500">Cargando tickets desde Jira…</div>

@@ -123,6 +123,36 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
 - El buscador global y el colapso de colas largas (sección 5) aplican también dentro de cada
   columna de agente, igual que en las demás pestañas.
 
+**Alerta de tiempo crítico en Pendiente cliente**
+
+> Basado en el proceso real del equipo: Jira envía un recordatorio automático al cliente
+> cada 2 horas sin respuesta, y a las 24 horas sin respuesta el caso se cierra
+> automáticamente. La app debe reflejar visualmente qué tan cerca está un ticket de ese
+> cierre, no solo mostrar el tiempo transcurrido de forma neutra.
+
+- **Ventana total de referencia: 24 horas** desde que el ticket pasó a "Pendiente cliente"
+  (mismo momento que ya se usa para calcular "Sin respuesta: Xh").
+- **Color escalonado según cercanía al cierre automático** (aplica al texto del tiempo sin
+  respuesta, tanto en la tarjeta de lista como en el panel de detalle):
+
+  | Rango de tiempo sin respuesta | Color | Estilo adicional |
+  |---|---|---|
+  | 0h – 8h | Naranja `#C2410C` (el mismo de hoy) | Ninguno |
+  | 8h – 16h | Naranja `#C2410C` | Texto en negrita |
+  | 16h – 22h | Rojo alerta `#DC2626` | Ícono de advertencia ⚠️ junto al tiempo |
+  | 22h – 24h | Rojo alerta `#DC2626` | Ícono ⚠️ + texto en negrita + mensaje "Se cierra
+  pronto" visible junto al tiempo |
+
+- **Cuenta regresiva hacia el cierre:** además del tiempo transcurrido ("Sin respuesta:
+  1d 2h"), mostrar cuánto falta para el cierre automático a las 24h (ej. "Se cierra en 6h
+  si no hay respuesta"). Ambos datos se calculan del mismo timestamp — no requiere ninguna
+  llamada adicional a Jira.
+- Si el ticket ya superó las 24h (el cierre automático de Jira aún no se reflejó, por
+  ejemplo por demora del ciclo de polling), mostrar el estado como vencido en vez de un
+  número negativo (ej. "Tiempo de respuesta vencido" en vez de "Se cierra en -2h").
+- Esta alerta es puramente visual — no dispara ninguna acción automática desde la app (el
+  cierre real del caso lo sigue haciendo Jira, no esta herramienta).
+
 **Tarjeta de ticket en pestañas de lista (Nivel 1, Nivel 2, Pendiente cliente)**
 
 > Aplica al diseño de la tarjeta tal como aparece en la lista (antes de expandir el panel de
@@ -220,7 +250,8 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
 | Accent | `#3B5BDB` | Borde tickets N2 en curso, badges de nivel, links |
 | Lavanda | `#E8EAF5` | Fondo de la pestaña activa |
 | Verde | `#22c55e` | Borde tickets en validación, paso completado en historial |
-| Naranja | `#C2410C` | Estado "Pendiente cliente", tiempo sin respuesta |
+| Naranja | `#C2410C` | Estado "Pendiente cliente", tiempo sin respuesta (0-16h) |
+| Rojo alerta | `#DC2626` | Tiempo sin respuesta en zona crítica (16-24h), ver sección 5 |
 | Fondo | `#F8F9FC` | Fondo general de la aplicación |
 
 - **Sidebar:** fondo `#2D3172`; ícono/texto en blanco inactivo; ítem activo con fondo blanco
@@ -326,7 +357,8 @@ los datos estáticos del prototipo por datos en tiempo real.
 - Validar el prototipo con el equipo de soporte (N1 y N2) para ajustes de UX antes del desarrollo.
 - Conectar con Jira API v3 y reemplazar todos los datos estáticos del prototipo.
 - Implementar WebSockets o polling para actualización automática en tiempo real.
-- Definir criterios de alerta visual para tickets "Pendiente cliente" con tiempo de espera crítico.
+- ~~Definir criterios de alerta visual para tickets "Pendiente cliente" con tiempo de espera
+  crítico.~~ Definido — ver sección 5, "Alerta de tiempo crítico en Pendiente cliente".
 - Iniciar diseño del Módulo 2: dashboard de reportería para liderazgo.
 
 ---
