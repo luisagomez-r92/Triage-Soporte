@@ -45,7 +45,7 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
 | Pestaña | Contenido | Orden |
 |---|---|---|
 | Tablero general | Vista kanban: N0, Nivel 1, Nivel 2, Pendiente. Incluye buscador global. | Por columna según nivel |
-| Nivel 1 – Revisión | En revisión + en espera (sin asignar) + regresados de N2 para validar. | Por hora de asignación al agente N1 |
+| Nivel 1 – Revisión | Vista kanban con una columna por agente de N1. Cada columna lista los casos asignados a esa persona (en revisión y en validación). Los "en espera" (sin asignar) no aparecen aquí — se ven solo en el Tablero general hasta que un agente los toma. | Dentro de cada columna: por hora de asignación al agente (el primero asignado aparece primero) |
 | Nivel 2 – Especialistas | En curso (borde azul) + cola colapsable. | En curso: por hora de asignación. En cola: por prioridad (Critical → Low), y dentro de cada prioridad por hora de escalado |
 | Pendiente cliente | Tickets pausados esperando respuesta, con tiempo transcurrido visible. | Por hora en que pasó a pendiente |
 
@@ -68,6 +68,54 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
 - Tickets colapsados se expanden automáticamente al buscar.
 - Muestra conteo de resultados en tiempo real.
 
+**Vista kanban por agente en Nivel 1 – Revisión**
+
+- La pestaña "Nivel 1 – Revisión" se organiza como un tablero kanban: **una columna por
+  cada agente de N1** con casos asignados actualmente (no una lista única como en las demás
+  pestañas de detalle).
+- Cada columna muestra el nombre del agente como encabezado, con un contador de casos
+  asignados a esa persona.
+- Dentro de cada columna, los casos siguen el diseño de "Tarjeta de ticket en pestañas de
+  lista" descrito arriba (metadatos, título=asunto, barra de progreso, chip discreto, botón
+  Ver detalle, etc.) y se ordenan por hora de asignación (el primero asignado aparece primero
+  dentro de esa columna).
+- Los casos "en validación" (regresados de N2) aparecen **dentro de la columna del agente**
+  que los tomó originalmente, conservando el borde verde izquierdo distintivo (regla de la
+  sección 6) — no se agrupan aparte.
+- Los tickets "En espera" (sin asignar) **no aparecen en esta vista**, ya que por definición
+  no tienen agente asignado. Siguen siendo visibles únicamente en el Tablero general (columna
+  Nivel 0 – Nuevos) hasta que un agente los toma; en ese momento pasan a la columna de esa
+  persona en esta vista.
+- El buscador global y el colapso de colas largas (sección 5) aplican también dentro de cada
+  columna de agente, igual que en las demás pestañas.
+
+**Tarjeta de ticket en pestañas de lista (Nivel 1, Nivel 2, Pendiente cliente)**
+
+> Aplica al diseño de la tarjeta tal como aparece en la lista (antes de expandir el panel de
+> detalle). No confundir con el Modal de detalle ni el Panel de detalle desplegable descritos
+> abajo, que muestran información adicional al hacer clic.
+
+- **Encabezado (metadatos):** en texto gris pequeño, sobre el título: número de ticket + hora
+  de creación + hora en que fue tomado por el agente. Formato: `FK-1042 · 09:15 · tomado 09:18`.
+- **Título de la tarjeta:** el asunto/descripción breve del caso (ej. "Error al cargar
+  documentos de importación"), en negrita — **no** el número de ticket.
+- **Solicitante:** nombre del solicitante y empresa si aplica (ej. "Laura Gómez -
+  Importex S.A."), debajo del título.
+- **Barra de progreso:** visible directamente en la tarjeta de la lista (no solo en el
+  detalle), con el porcentaje según la tabla de estados de la sección 3, alineado a la
+  derecha de la barra.
+- **Chip de estado:** versión discreta — pequeño, con punto/ícono indicador, no un chip
+  grande de color de fondo.
+- **Responsable:** avatar + nombre, alineado a la izquierda en la parte inferior de la
+  tarjeta.
+- **Botón "Ver detalle":** estilo píldora con borde, alineado a la derecha en la parte
+  inferior. Ausente en tickets "En espera" (ver sección 6).
+- **Agrupación:** los tickets se agrupan bajo encabezados de sección en gris y mayúsculas
+  (ej. "REVISIÓN INICIAL - ORDEN DE ASIGNACIÓN"), con un contador de tickets por grupo a la
+  derecha del encabezado — no solo un contador total para toda la pestaña.
+- **Buscador visible:** cada pestaña de lista muestra la barra de búsqueda y el contador
+  "Todos los casos [N]" arriba de los grupos, igual que en el Tablero general.
+
 **Modal de detalle** (click en tarjeta del Tablero general)
 - Barra de progreso, tarjetas de tiempo global y estado, responsable asignado (avatar + badge
   de nivel), historial completo con línea de tiempo vertical.
@@ -76,6 +124,9 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
 - Dos tarjetas de tiempo (global y estado actual), tarjeta de responsable con badge de nivel,
   historial con línea de tiempo.
 - Alertas contextuales para tickets en validación y en apoyo por desborde.
+- Nota: la barra de progreso de este panel es adicional a la que ya se ve en la tarjeta de la
+  lista (ver "Tarjeta de ticket en pestañas de lista" arriba); no es la única ubicación donde
+  aparece.
 
 **Colapso de colas largas**
 - Columnas/secciones con más de 3 tickets muestran los primeros y colapsan el resto bajo
