@@ -3,7 +3,6 @@ import SearchBar from '../../components/SearchBar'
 import TicketListCard from '../../components/TicketListCard'
 import { useCollapsibleList } from '../../hooks/useCollapsibleList'
 import { useSearch } from '../../hooks/useSearch'
-import { MOCK_TICKETS } from '../../lib/mockTickets'
 import type { Ticket } from '../../types/ticket'
 
 function getPendienteKey(ticket: Ticket): number {
@@ -13,10 +12,14 @@ function getPendienteKey(ticket: Ticket): number {
   return new Date(fecha).getTime()
 }
 
-function PendienteCliente() {
-  const pendienteTickets = MOCK_TICKETS.filter(
-    (ticket) => ticket.estado === 'Pendiente cliente',
-  ).sort((a, b) => getPendienteKey(a) - getPendienteKey(b))
+interface PendienteClienteProps {
+  tickets: Ticket[]
+}
+
+function PendienteCliente({ tickets }: PendienteClienteProps) {
+  const pendienteTickets = tickets
+    .filter((ticket) => ticket.estado === 'Pendiente cliente')
+    .sort((a, b) => getPendienteKey(a) - getPendienteKey(b))
 
   const { query, setQuery, matchedIds, resultCount } = useSearch(pendienteTickets)
   const [expandedTicketId, setExpandedTicketId] = useState<string | null>(null)

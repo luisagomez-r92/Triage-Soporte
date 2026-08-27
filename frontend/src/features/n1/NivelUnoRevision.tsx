@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react'
 import SearchBar from '../../components/SearchBar'
 import TicketListColumn from '../../components/TicketListColumn'
 import { useSearch } from '../../hooks/useSearch'
-import { MOCK_TICKETS } from '../../lib/mockTickets'
 import type { Ticket, TicketStatus } from '../../types/ticket'
 
 // El criterio de esta vista es tener agente asignado, no un estado específico
@@ -21,8 +20,12 @@ function getAsignacionKey(ticket: Ticket): number {
   return new Date(fecha).getTime()
 }
 
-function NivelUnoRevision() {
-  const nivelUnoTickets = MOCK_TICKETS.filter(
+interface NivelUnoRevisionProps {
+  tickets: Ticket[]
+}
+
+function NivelUnoRevision({ tickets }: NivelUnoRevisionProps) {
+  const nivelUnoTickets = tickets.filter(
     (ticket): ticket is Ticket & { responsable: NonNullable<Ticket['responsable']> } =>
       NIVEL1_ESTADOS.includes(ticket.estado) && Boolean(ticket.responsable),
   )

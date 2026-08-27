@@ -4,7 +4,6 @@ import SearchBar from '../../components/SearchBar'
 import SearchResultsList from '../../components/board/SearchResultsList'
 import TicketDetailModal from '../../components/board/TicketDetailModal'
 import { useSearch } from '../../hooks/useSearch'
-import { MOCK_TICKETS } from '../../lib/mockTickets'
 import type { Ticket, TicketStatus } from '../../types/ticket'
 
 const COLUMNS: { title: string; estados: TicketStatus[] }[] = [
@@ -18,25 +17,31 @@ function getColumnTitle(estado: TicketStatus): string {
   return COLUMNS.find((column) => column.estados.includes(estado))?.title ?? ''
 }
 
-function getTicketsForColumn(estados: TicketStatus[]) {
+function getTicketsForColumn(tickets: Ticket[], estados: TicketStatus[]) {
   // Ordena por la posición del estado dentro de `estados` (ej. en Nivel 2, "En curso
   // N2" antes que "Escalado a N2") para que el ticket en curso nunca caiga dentro del
-  // colapso de la cola. El orden fino dentro de cada estado (hora, prioridad/Rank de
-  // Jira) llega con la integración real — ver REQUIREMENTS.md §6 y §9.
-  return MOCK_TICKETS.filter((ticket) => estados.includes(ticket.estado)).sort(
+  // colapso de la cola. El orden fino dentro de cada estado (prioridad/Rank de Jira
+  // dentro de la cola) llega con WebSocket/polling — ver REQUIREMENTS.md §6 y §9.
+  return tickets.filter((ticket) => estados.includes(ticket.estado)).sort(
     (a, b) => estados.indexOf(a.estado) - estados.indexOf(b.estado),
   )
 }
 
-function TableroGeneral() {
-  const { query, setQuery, matchedIds, resultCount } = useSearch(MOCK_TICKETS)
+interface TableroGeneralProps {
+  tickets: Ticket[]
+}
+
+function TableroGeneral({ tickets }: TableroGeneralProps) {
+  const { query, setQuery, matchedIds, resultCount } = useSearch(tickets)
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
 
   const searchResults = matchedIds
-    ? MOCK_TICKETS.filter((ticket) => matchedIds.has(ticket.id)).map((ticket) => ({
-        ticket,
-        columnTitle: getColumnTitle(ticket.estado),
-      }))
+    ? tickets
+        .filter((ticket) => matchedIds.has(ticket.id))
+        .map((ticket) => ({
+          ticket,
+          columnTitle: getColumnTitle(ticket.estado),
+        }))
     : []
 
   return (
@@ -54,7 +59,7 @@ function TableroGeneral() {
           <BoardColumn
             key={title}
             title={title}
-            tickets={getTicketsForColumn(estados)}
+            tickets={getTicketsForColumn(tickets, estados)}
             matchedIds={matchedIds}
             onTicketClick={setSelectedTicket}
           />

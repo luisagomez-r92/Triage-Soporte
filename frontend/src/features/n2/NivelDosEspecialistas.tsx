@@ -2,7 +2,6 @@ import { useState } from 'react'
 import SearchBar from '../../components/SearchBar'
 import TicketListColumn from '../../components/TicketListColumn'
 import { useSearch } from '../../hooks/useSearch'
-import { MOCK_TICKETS } from '../../lib/mockTickets'
 import type { Ticket, TicketStatus } from '../../types/ticket'
 
 const NIVEL2_ESTADOS: TicketStatus[] = ['Escalado a N2', 'Pendiente Tech', 'En curso N2']
@@ -20,8 +19,12 @@ function compararPorRank(a: Ticket, b: Ticket): number {
   return (a.rank ?? '').localeCompare(b.rank ?? '')
 }
 
-function NivelDosEspecialistas() {
-  const nivel2Tickets = MOCK_TICKETS.filter((ticket) => NIVEL2_ESTADOS.includes(ticket.estado))
+interface NivelDosEspecialistasProps {
+  tickets: Ticket[]
+}
+
+function NivelDosEspecialistas({ tickets }: NivelDosEspecialistasProps) {
+  const nivel2Tickets = tickets.filter((ticket) => NIVEL2_ESTADOS.includes(ticket.estado))
   const { query, setQuery, matchedIds, resultCount } = useSearch(nivel2Tickets)
   const [expandedTicketId, setExpandedTicketId] = useState<string | null>(null)
 
