@@ -30,18 +30,20 @@ function TicketDetailPanel({ ticket }: TicketDetailPanelProps) {
             avatarUrl={ticket.responsable.avatarUrl}
           />
           <span className="text-sm text-navy">{ticket.responsable.nombre}</span>
-          <LevelBadge nivel={ticket.responsable.nivel} />
+          {ticket.responsable.nivel && <LevelBadge nivel={ticket.responsable.nivel} />}
         </div>
       )}
 
-      {ticket.historial && ticket.historial.length > 0 && (
-        <div>
-          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
-            Historial
-          </h3>
+      <div>
+        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
+          Historial
+        </h3>
+        {ticket.historial && ticket.historial.length > 0 ? (
           <TicketHistoryTimeline historial={ticket.historial} />
-        </div>
-      )}
+        ) : (
+          <p className="text-xs text-gray-400">Historial no disponible</p>
+        )}
+      </div>
     </div>
   )
 }

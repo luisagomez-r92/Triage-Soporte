@@ -10,7 +10,7 @@ import type { Ticket, TicketStatus } from '../../types/ticket'
 const COLUMNS: { title: string; estados: TicketStatus[] }[] = [
   { title: 'Nivel 0 – Nuevos', estados: ['En espera'] },
   { title: 'Nivel 1 – Revisión', estados: ['En revisión N1', 'En validación'] },
-  { title: 'Nivel 2 – Especialistas', estados: ['En curso N2', 'Escalado a N2'] },
+  { title: 'Nivel 2 – Especialistas', estados: ['En curso N2', 'Escalado a N2', 'Pendiente Tech'] },
   { title: 'Pendiente cliente', estados: ['Pendiente cliente'] },
 ]
 

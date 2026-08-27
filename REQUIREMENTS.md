@@ -33,10 +33,11 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
 
 | Estado | Pestaña | Progreso | Descripción |
 |---|---|---|---|
-| En espera | Nivel 1 / N0 | 0% | Caso recibido, sin asignar. Sin historial ni botón de detalle. |
+| En espera | Nivel 1 / N0 | 0% | Caso recibido, en cola sin tomar activamente. Puede o no tener responsable ya asignado en Jira. Sin historial ni botón de detalle. |
 | En revisión N1 | Nivel 1 | 30% | Tomado por agente N1. En análisis inicial. |
 | Pendiente cliente | Pendiente cliente | 35% | Se requiere info del cliente. Muestra tiempo sin respuesta. |
 | Escalado a N2 | Nivel 2 | 40% | Derivado a especialista. En cola esperando ser tomado. |
+| Pendiente Tech | Nivel 2 | 45% | Variante de "Escalado a N2": el ticket quedó esperando a que un agente de Tech lo tome, en una columna propia dentro de Nivel 2 – Especialistas (distinta de "Escalados" y "En curso"). Corresponde al status real de Jira "Pendiente" (columna PENDIENTE TECH). |
 | En curso N2 | Nivel 2 | 60% | Desarrollador trabajando activamente en el caso. |
 | En validación | Nivel 1 | 90% | N2 aplicó solución. N1 confirma cierre del caso. |
 
@@ -45,50 +46,53 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
 | Pestaña | Contenido | Orden |
 |---|---|---|
 | Tablero general | Vista kanban: N0, Nivel 1, Nivel 2, Pendiente. Incluye buscador global. | Por columna según nivel |
-| Nivel 1 – Revisión | Vista kanban con una columna por agente de N1. Cada columna lista los casos asignados a esa persona (en revisión y en validación). Los "en espera" (sin asignar) no aparecen aquí — se ven solo en el Tablero general hasta que un agente los toma. | Dentro de cada columna: por hora de asignación al agente (el primero asignado aparece primero) |
-| Nivel 2 – Especialistas | Vista de dos columnas: "Escalados" (en cola, esperando ser tomados) y "En curso" (ya tomados por un desarrollador). | Columna "Escalados": por campo Rank de Jira. Columna "En curso": por hora de asignación al desarrollador |
+| Nivel 1 – Revisión | Vista kanban con una columna por agente de N1. Cada columna lista TODOS los casos con esa persona como responsable (En espera ya asignados, En revisión N1, En validación) — el criterio es tener agente asignado, no el estado del ticket. Los "en espera" que aún NO tienen agente asignado no aparecen aquí — se ven solo en el Tablero general hasta que alguien los toma. | Dentro de cada columna: por hora de asignación al agente (el primero asignado aparece primero) |
+| Nivel 2 – Especialistas | Vista de tres columnas: "Escalados" (en cola, esperando ser tomados), "Pendiente Tech" (esperando que Tech lo tome, variante de escalado) y "En curso" (ya tomados por un desarrollador). | Columnas "Escalados" y "Pendiente Tech": por campo Rank de Jira. Columna "En curso": por hora de asignación al desarrollador |
 | Pendiente cliente | Tickets pausados esperando respuesta, con tiempo transcurrido visible. | Por hora en que pasó a pendiente |
 
 ### Columnas del Tablero general
 
 | Columna | Descripción |
 |---|---|
-| Nivel 0 – Nuevos | Recién creados, sin asignar. FIFO estricto por hora de llegada. |
+| Nivel 0 – Nuevos | Recién creados, estado "En espera" (puede o no tener responsable ya asignado en Jira). FIFO estricto por hora de llegada. |
 | Nivel 1 – Revisión | En atención por N1. Incluye casos en validación (borde verde izq.). |
-| Nivel 2 – Especialistas | En curso (borde azul) y en cola, esta última ordenada por el campo Rank de Jira. Máx. 3 visibles, resto colapsado ("Ver más"). *(Esta es la columna única del Tablero general — no confundir con la vista de dos columnas "Escalados"/"En curso" de la pestaña Nivel 2 – Especialistas, ver sección 5).* |
+| Nivel 2 – Especialistas | En curso (borde azul) y en cola, esta última ordenada por el campo Rank de Jira. Máx. 3 visibles, resto colapsado ("Ver más"). *(Esta es la columna única del Tablero general — no confundir con la vista de tres columnas "Escalados"/"Pendiente Tech"/"En curso" de la pestaña Nivel 2 – Especialistas, ver sección 5).* |
 | Pendiente cliente | Con tiempo sin respuesta visible en la tarjeta. |
 
 ## 5. Funcionalidades principales
 
 **Buscador global** (presente en todas las pestañas)
-- Busca por número de ticket (FK-XXXX) o nombre del solicitante.
+- Busca por número de ticket (ST-XXXX) o nombre del solicitante.
 - Tablero: resalta coincidencias, atenúa el resto; lista resultados con su columna de origen.
 - Pestañas de detalle: filtra tickets visibles; si la pestaña activa no tiene resultados,
   navega automáticamente a la correcta con banner informativo.
 - Tickets colapsados se expanden automáticamente al buscar.
 - Muestra conteo de resultados en tiempo real.
 
-**Vista de dos columnas en Nivel 2 – Especialistas**
+**Vista de tres columnas en Nivel 2 – Especialistas**
 
-- La pestaña "Nivel 2 – Especialistas" se organiza en **dos columnas**, no una lista con
+- La pestaña "Nivel 2 – Especialistas" se organiza en **tres columnas**, no una lista con
   sección colapsable como antes:
   - **Columna "Escalados":** tickets en cola, esperando ser **tomados** (iniciados) por el
     desarrollador. Orden: por el campo **Rank de Jira** (ver sección 6 y 9 — no recalcular
     prioridad + hora manualmente, respetar el orden que llega del API).
+  - **Columna "Pendiente Tech":** variante de "Escalado a N2" — tickets esperando a que un
+    agente de Tech los tome, correspondiente al status real de Jira "Pendiente" (columna
+    PENDIENTE TECH). Mismo criterio de orden que "Escalados" (campo Rank de Jira).
   - **Columna "En curso":** tickets ya tomados, en trabajo activo. Borde azul izquierdo
     (regla de la sección 6). Orden: por hora en que el desarrollador tomó el ticket.
 - **Todo ticket escalado a N2 ya tiene un especialista asignado en Jira desde el momento del
-  escalado**, incluso si aún está en la columna "Escalados" sin tomar. La tarjeta debe
-  mostrar avatar + nombre del responsable en **ambas** columnas — la diferencia entre
-  "Escalados" y "En curso" es si el especialista ya inició el trabajo, no si tiene o no
+  escalado**, incluso si aún está en la columna "Escalados" o "Pendiente Tech" sin tomar. La
+  tarjeta debe mostrar avatar + nombre del responsable en **las tres** columnas — la
+  diferencia con "En curso" es si el especialista ya inició el trabajo, no si tiene o no
   responsable asignado.
 - Cada columna muestra un contador de tickets en su encabezado.
-- El badge de prioridad (Critical/High/Medium/Low) es visible en ambas columnas, ya que
+- El badge de prioridad (Critical/High/Medium/Low) es visible en las tres columnas, ya que
   aplica a todo ticket de Nivel 2 (sección 6).
 - El colapso de colas largas (sección 5, "Ver N más") aplica dentro de cada columna por
-  separado si supera 3 tickets — no se comparte el límite entre ambas columnas.
+  separado si supera 3 tickets — no se comparte el límite entre columnas.
 - El buscador global y el panel de detalle desplegable (botón "Ver detalle") aplican igual
-  en ambas columnas, reutilizando el diseño de "Tarjeta de ticket en pestañas de lista"
+  en las tres columnas, reutilizando el diseño de "Tarjeta de ticket en pestañas de lista"
   descrito abajo.
 - Un ticket pasa de la columna "Escalados" a "En curso" en el momento en que un desarrollador
   lo toma — este movimiento debe reflejarse en tiempo real (WebSocket/polling), igual que el
@@ -97,20 +101,24 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
 **Vista kanban por agente en Nivel 1 – Revisión**
 
 - La pestaña "Nivel 1 – Revisión" se organiza como un tablero kanban: **una columna por
-  cada agente de N1** con casos asignados actualmente (no una lista única como en las demás
-  pestañas de detalle).
+  cada agente de N1**, listando **todo ticket que tenga a esa persona como responsable**,
+  sin importar su estado exacto (no una lista única como en las demás pestañas de detalle).
 - Cada columna muestra el nombre del agente como encabezado, con un contador de casos
   asignados a esa persona.
 - Dentro de cada columna, los casos siguen el diseño de "Tarjeta de ticket en pestañas de
   lista" descrito arriba (metadatos, título=asunto, barra de progreso, chip discreto, botón
   Ver detalle, etc.) y se ordenan por hora de asignación (el primero asignado aparece primero
   dentro de esa columna).
+- Los casos "En espera" que **ya tienen agente asignado** en Jira (aunque aún no los hayan
+  tomado activamente) sí aparecen en la columna de ese agente. La ausencia de botón "Ver
+  detalle" e historial en esos casos sigue dependiendo del estado (sección 6), no de si
+  aparecen o no en esta vista.
 - Los casos "en validación" (regresados de N2) aparecen **dentro de la columna del agente**
   que los tomó originalmente, conservando el borde verde izquierdo distintivo (regla de la
   sección 6) — no se agrupan aparte.
-- Los tickets "En espera" (sin asignar) **no aparecen en esta vista**, ya que por definición
-  no tienen agente asignado. Siguen siendo visibles únicamente en el Tablero general (columna
-  Nivel 0 – Nuevos) hasta que un agente los toma; en ese momento pasan a la columna de esa
+- Los tickets "En espera" que **todavía NO tienen agente asignado** son los únicos que no
+  aparecen en esta vista — siguen siendo visibles únicamente en el Tablero general (columna
+  Nivel 0 – Nuevos) hasta que alguien los toma; en ese momento pasan a la columna de esa
   persona en esta vista.
 - El buscador global y el colapso de colas largas (sección 5) aplican también dentro de cada
   columna de agente, igual que en las demás pestañas.
@@ -122,11 +130,13 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
 > abajo, que muestran información adicional al hacer clic.
 
 - **Encabezado (metadatos):** en texto gris pequeño, sobre el título: número de ticket + hora
-  de creación + hora en que fue tomado por el agente. Formato: `FK-1042 · 09:15 · tomado 09:18`.
+  de creación + hora en que fue tomado por el agente. Formato: `ST-1042 · 09:15 · tomado 09:18`.
 - **Título de la tarjeta:** el asunto/descripción breve del caso (ej. "Error al cargar
   documentos de importación"), en negrita — **no** el número de ticket.
 - **Solicitante:** nombre del solicitante y empresa si aplica (ej. "Laura Gómez -
-  Importex S.A."), debajo del título.
+  Importex S.A."), debajo del título. El dato de empresa viene del campo **"Company"**
+  de Jira (`customfield_10076`) — confirmado, no usar ninguno de los otros campos
+  candidatos (Organizations, Nombre del cliente, Nit Empresa, etc.).
 - **Barra de progreso:** visible directamente en la tarjeta de la lista (no solo en el
   detalle), con el porcentaje según la tabla de estados de la sección 3, alineado a la
   derecha de la barra.
@@ -160,7 +170,11 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
 
 ## 6. Reglas de negocio
 
-- Tickets "En espera": sin historial, sin botón "Ver detalle", sin agente asignado.
+- Tickets "En espera": sin historial, sin botón "Ver detalle". **Sí pueden tener responsable
+  asignado** en Jira aunque el ticket siga sin moverse de columna (ej. Jira ya le asignó
+  alguien pero aún no lo tomó activamente) — en ese caso, la tarjeta debe mostrar avatar +
+  nombre del responsable con normalidad. La ausencia de historial/detalle depende del
+  **estado** del ticket, no de si tiene o no responsable asignado.
 - Orden Nivel 0: estrictamente FIFO por hora de creación.
 - Orden Nivel 1: por hora de asignación al agente N1.
 - Orden Nivel 2 en curso: por hora en que fue tomado por el desarrollador.
@@ -183,8 +197,18 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
 - Validación post-N2 es obligatoria antes de cerrar el ticket.
 - Borde verde en tarjeta = regresado de N2 para validación en N1.
 - Borde azul en tarjeta = en curso activo por desarrollador de N2.
-- Prioridades N2: Critical → High → Medium → Low (solo visible en tickets de Nivel 2;
-  corresponde al campo "Priority" de Jira).
+- **Prioridades N2 — mapeo de 5 niveles de Jira a 4 niveles en la app** (solo visible en
+  tickets de Nivel 2; campo "Priority" de Jira):
+
+  | Prioridad real en Jira | Se muestra como |
+  |---|---|
+  | Highest | Critical |
+  | High | High |
+  | Medium | Medium |
+  | Low | Low |
+  | Lowest | Low |
+
+  Highest colapsa a Critical y Lowest colapsa a Low; High y Medium se mapean 1 a 1.
 - Tiempo sin respuesta visible en tarjetas y detalle de "Pendiente cliente".
 
 ## 7. Diseño visual (tokens de marca Finkargo)
@@ -222,26 +246,77 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
 | Backend / API | Jira API v3 (datos en tiempo real) |
 | Actualización en tiempo real | WebSockets o polling cada 30–60 s |
 | Avatares de agentes | Slack API (no Jira) |
-| Prioridades Nivel 2 | Critical → High → Medium → Low (campo "Priority" de Jira) |
+| Prioridades Nivel 2 | Ver mapeo de 5→4 niveles en sección 6 (campo "Priority" de Jira) |
 | Orden manual cola N2 | Campo interno **"Rank"** de Jira (LexoRank) — leer, no recalcular |
+| Prefijo de ticket | `ST-` (proyecto "Soporte Tech"), no `FK-` — usar la key real de Jira tal cual |
 | Repositorio | `luisagomez-r92/Triage-Soporte` |
 
-### Campo "Rank" de Jira — sincronización del orden manual en Nivel 2
+### Campo "Rank" de Jira — CONFIRMADO
 
+- Custom field: **`customfield_10019`**, nombre interno "Rank" (se muestra como
+  "Clasificación" en la UI de Jira), tipo `com.pyxis.greenhopper.jira:gh-lexo-rank`.
+- Confirmado: solo viene poblado a través del endpoint de la **API Agile**
+  (`/rest/agile/1.0/board/{boardId}/issue`) — el API core v3 **no** lo trae.
 - Jira guarda el orden visual de las tarjetas del tablero (incluido el drag & drop manual)
-  en un campo interno llamado **Rank**, independiente del campo "Priority".
-- Al consultar los issues de un tablero vía la API de Jira Software (`/rest/agile/1.0/...`),
-  estos vienen **ordenados por Rank por defecto**, siempre que el filtro del tablero tenga
-  `ORDER BY Rank ASC` (ya activo, dado que hoy el equipo reordena arrastrando tarjetas).
+  en este campo, independiente del campo "Priority".
 - La app debe consumir ese orden directamente en cada actualización (polling/WebSocket) y
-  usarlo para renderizar la cola de Nivel 2 — **sin reordenar por su cuenta** combinando
+  usarlo para renderizar las colas de Nivel 2 — **sin reordenar por su cuenta** combinando
   prioridad y hora, ya que Rank ya incorpora cualquier ajuste manual del equipo.
-- Nota de investigación técnica pendiente para el desarrollo: confirmar el nombre exacto
-  del custom field de Rank en la instancia de Finkargo (suele ser `customfield_10019` u
-  otro ID similar, específico de cada instancia de Jira) y validar si se requiere el
-  endpoint de la API Agile (`/rest/agile/1.0/board/{boardId}/issue`) en vez de la API
-  core v3 para obtenerlo, ya que el Rank es una función de Jira Software (Agile), no del
-  API core de issues.
+
+### Mapeo de estados Jira → REQUIREMENTS.md — CONFIRMADO
+
+| Columna del tablero Jira | Status real (`fields.status.name`) | Estado en la app |
+|---|---|---|
+| SIN REVISIÓN | Esperando por ayuda | En espera |
+| GESTIÓN LVL 1 | Gestión Nivel 1 | En revisión N1 |
+| ESCALADO LVL 2 | Escalado Nivel 2 | Escalado a N2 |
+| PENDIENTE TECH | Pendiente | Pendiente Tech (columna propia en Nivel 2, ver sección 5) |
+| GESTIÓN LVL 2 | Gestion Nivel 2 (sin tilde, tal cual en Jira) | En curso N2 |
+| ESPERANDO RESPUESTA CLIENTE | Esperando respuesta de cliente | Pendiente cliente |
+| EN Validación | Proceso de Validación | En validación |
+| — | Resuelto, Listo, CERRADA, Cancelado (`statusCategory: done`) | Fuera de la cola — no se muestra |
+
+### Filtrado de tickets activos
+
+- El tablero de Jira tiene ~11,886 issues totales (casi todos históricos/cerrados); solo
+  ~27 están activos hoy. Traer todo el tablero sin filtro es ineficiente.
+- Usar el parámetro `jql` del mismo endpoint Agile (ej. `statusCategory != Done`) para
+  filtrar — confirmado que esto **no** rompe el orden por Rank, ya que no lleva un
+  `ORDER BY` propio que lo sobrescriba.
+
+### Nombre del solicitante — nota conocida, no bloqueante
+
+- Algunas cuentas de Jira no tienen "nombre para mostrar" configurado, así que el campo
+  `solicitante` puede venir como email (ej. `nando.gonzalez@finkargo.com`) en vez de nombre
+  completo. No es un error del mapeo — la app debe mostrar el dato tal cual viene, sin
+  intentar adivinar o formatear un nombre a partir del email.
+
+### Responsable y nivel (N1/N2) — CONFIRMADO
+
+- El responsable de cada ticket se toma del campo **"persona asignada"** (assignee) de
+  Jira — no se mantiene una lista/roster estático separado.
+- El **nivel del badge (N1/N2)** que acompaña al responsable se deriva del **estado actual
+  del ticket**, no de la identidad de la persona (Jira no distingue si un usuario es agente
+  N1 o N2 como atributo propio):
+  - Estados que mapean a N1 (badge N1): "En espera", "En revisión N1", "En validación".
+  - Estados que mapean a N2 (badge N2): "Escalado a N2", "Pendiente Tech", "En curso N2".
+  - **"Pendiente cliente" es ambiguo** — el ticket pudo pausarse estando en N1 o en N2, y
+    hoy no hay forma de saberlo sin el historial de cambios (que está diferido, ver abajo).
+    Mientras el historial no esté implementado, la tarjeta de "Pendiente cliente" muestra
+    avatar + nombre del responsable **sin badge de nivel** — no forzar una inferencia
+    incorrecta. Una vez esté disponible el historial (changelog), se puede resolver
+    tomando el último nivel conocido antes de pasar a "Pendiente cliente".
+
+### Historial del ticket — diferido a un paso posterior
+
+- El endpoint de listado de issues del tablero (Agile API) **no** incluye el changelog
+  (historial de cambios de estado). Obtenerlo requiere una llamada aparte por ticket:
+  `GET /rest/api/3/issue/{id}?expand=changelog`.
+- Con ~27 tickets activos, es viable pedirlo por ticket sin problema de volumen, pero
+  implica una llamada extra por ticket en cada refresh — se implementará en un paso
+  posterior. Mientras tanto, el campo `historial` de la transformación queda como
+  `undefined`, y el Modal de detalle / Panel de detalle desplegable deben manejar ese caso
+  sin romperse (ej. mostrar "Historial no disponible" en vez de una lista vacía o un error).
 
 ## 10. Próximos pasos
 

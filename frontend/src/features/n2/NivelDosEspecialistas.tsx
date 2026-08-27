@@ -5,7 +5,7 @@ import { useSearch } from '../../hooks/useSearch'
 import { MOCK_TICKETS } from '../../lib/mockTickets'
 import type { Ticket, TicketStatus } from '../../types/ticket'
 
-const NIVEL2_ESTADOS: TicketStatus[] = ['Escalado a N2', 'En curso N2']
+const NIVEL2_ESTADOS: TicketStatus[] = ['Escalado a N2', 'Pendiente Tech', 'En curso N2']
 
 function getAsignacionKey(ticket: Ticket): number {
   // "Hora en que el desarrollador tomó el ticket" = última entrada de historial.
@@ -33,6 +33,10 @@ function NivelDosEspecialistas() {
     .filter((ticket) => ticket.estado === 'Escalado a N2')
     .sort(compararPorRank)
 
+  const pendienteTech = visibleTickets
+    .filter((ticket) => ticket.estado === 'Pendiente Tech')
+    .sort(compararPorRank)
+
   const enCurso = visibleTickets
     .filter((ticket) => ticket.estado === 'En curso N2')
     .sort((a, b) => getAsignacionKey(a) - getAsignacionKey(b))
@@ -57,6 +61,13 @@ function NivelDosEspecialistas() {
         <TicketListColumn
           title="Escalados"
           tickets={escalados}
+          matchedIds={matchedIds}
+          expandedTicketId={expandedTicketId}
+          onToggleTicketDetail={toggleDetalle}
+        />
+        <TicketListColumn
+          title="Pendiente Tech"
+          tickets={pendienteTech}
           matchedIds={matchedIds}
           expandedTicketId={expandedTicketId}
           onToggleTicketDetail={toggleDetalle}

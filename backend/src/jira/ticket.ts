@@ -1,3 +1,7 @@
+// Mismo shape que frontend/src/types/ticket.ts. Duplicado porque frontend y backend son
+// paquetes npm separados sin workspace compartido — si eso cambia, mover a un paquete
+// `shared/` y eliminar esta copia.
+
 export type TicketStatus =
   | 'En espera'
   | 'En revisión N1'
@@ -13,8 +17,6 @@ export type TicketNivel = 'N1' | 'N2'
 
 export interface TicketResponsable {
   nombre: string
-  // Ausente en "Pendiente cliente": el ticket pudo pausarse estando en N1 o en N2 y,
-  // sin el historial (diferido), no hay forma de saberlo — REQUIREMENTS.md §9.
   nivel?: TicketNivel
   avatarUrl?: string
 }
@@ -33,9 +35,6 @@ export interface Ticket {
   creadoEn: string
   prioridad?: TicketPriority
   responsable?: TicketResponsable
-  // Ausente en tickets "En espera" — regla de negocio: sin historial (REQUIREMENTS.md §6).
   historial?: TicketHistoryEntry[]
-  // Campo Rank de Jira (LexoRank) — solo relevante en la cola de "Escalado a N2".
-  // Se compara lexicográficamente tal cual, nunca se recalcula (REQUIREMENTS.md §6, §9).
   rank?: string
 }

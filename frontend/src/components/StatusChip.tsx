@@ -5,6 +5,8 @@ const SOLID_STYLES: Record<TicketStatus, string> = {
   'En revisión N1': 'bg-navy/10 text-navy',
   'Pendiente cliente': 'bg-naranja/10 text-naranja',
   'Escalado a N2': 'bg-gray-100 text-gray-600',
+  // Variante de "Escalado a N2" (REQUIREMENTS.md §5) — mismo estilo neutro.
+  'Pendiente Tech': 'bg-gray-100 text-gray-600',
   'En curso N2': 'bg-accent/10 text-accent',
   'En validación': 'bg-verde/10 text-verde',
 }
@@ -14,6 +16,7 @@ const DOT_COLOR: Record<TicketStatus, string> = {
   'En revisión N1': 'bg-navy',
   'Pendiente cliente': 'bg-naranja',
   'Escalado a N2': 'bg-gray-400',
+  'Pendiente Tech': 'bg-gray-400',
   'En curso N2': 'bg-accent',
   'En validación': 'bg-verde',
 }

@@ -3,22 +3,26 @@ import type { Ticket } from '../types/ticket'
 export const MOCK_TICKETS: Ticket[] = [
   // Nivel 0 – Nuevos (sin historial: regla de negocio REQUIREMENTS.md §6)
   {
-    id: 'FK-1001',
+    id: 'ST-1001',
     titulo: 'Error al cargar comprobante de pago',
     solicitante: 'Camila Rojas',
     estado: 'En espera',
     creadoEn: '2026-08-26T08:10:00',
   },
   {
-    id: 'FK-1002',
+    id: 'ST-1002',
     titulo: 'No puedo actualizar mis datos de envío',
     solicitante: 'Andrés Muñoz',
     empresa: 'Muñoz & Asociados',
     estado: 'En espera',
     creadoEn: '2026-08-26T08:45:00',
+    // Ya asignado en Jira pero aún no tomado activamente (REQUIREMENTS.md §6): sigue
+    // "En espera", sin historial ni botón "Ver detalle", pero sí aparece con responsable
+    // en su tarjeta y en la columna de Camilo Reyes en Nivel 1 – Revisión.
+    responsable: { nombre: 'Camilo Reyes', nivel: 'N1' },
   },
   {
-    id: 'FK-1003',
+    id: 'ST-1003',
     titulo: 'Consulta sobre estado de mi solicitud de crédito',
     solicitante: 'Valentina Ruiz',
     estado: 'En espera',
@@ -27,7 +31,7 @@ export const MOCK_TICKETS: Ticket[] = [
 
   // Nivel 1 – Revisión
   {
-    id: 'FK-0987',
+    id: 'ST-0987',
     titulo: 'Factura duplicada en el módulo de pagos',
     solicitante: 'Jorge Salazar',
     empresa: 'Salazar Import S.A.S.',
@@ -40,7 +44,7 @@ export const MOCK_TICKETS: Ticket[] = [
     ],
   },
   {
-    id: 'FK-0990',
+    id: 'ST-0990',
     titulo: 'No llega el correo de confirmación de importación',
     solicitante: 'Diana Castro',
     empresa: 'Castro Trading Ltda.',
@@ -53,7 +57,7 @@ export const MOCK_TICKETS: Ticket[] = [
     ],
   },
   {
-    id: 'FK-0993',
+    id: 'ST-0993',
     titulo: 'Cliente reporta cobro duplicado en su factura',
     solicitante: 'Marcela Uribe',
     empresa: 'Uribe Consultores',
@@ -66,7 +70,7 @@ export const MOCK_TICKETS: Ticket[] = [
     ],
   },
   {
-    id: 'FK-0975',
+    id: 'ST-0975',
     titulo: 'Error al cargar documentos de importación',
     solicitante: 'Felipe Ortiz',
     empresa: 'Ortiz Comercializadora',
@@ -84,7 +88,7 @@ export const MOCK_TICKETS: Ticket[] = [
 
   // Nivel 2 – Especialistas
   {
-    id: 'FK-0960',
+    id: 'ST-0960',
     titulo: 'Fallo al sincronizar inventario con el ERP',
     solicitante: 'Mariana Gómez',
     empresa: 'Gómez Logística S.A.',
@@ -100,7 +104,7 @@ export const MOCK_TICKETS: Ticket[] = [
     ],
   },
   {
-    id: 'FK-0955',
+    id: 'ST-0955',
     titulo: 'Bloqueo al firmar contrato digital',
     solicitante: 'Ricardo Mejía',
     estado: 'Escalado a N2',
@@ -115,7 +119,7 @@ export const MOCK_TICKETS: Ticket[] = [
     ],
   },
   {
-    id: 'FK-0958',
+    id: 'ST-0958',
     titulo: 'Discrepancia en el tipo de cambio aplicado',
     solicitante: 'Paula Londoño',
     empresa: 'Londoño Textiles',
@@ -131,7 +135,7 @@ export const MOCK_TICKETS: Ticket[] = [
     ],
   },
   {
-    id: 'FK-0959',
+    id: 'ST-0959',
     titulo: 'No se refleja el pago abonado la semana pasada',
     solicitante: 'Diego Cárdenas',
     estado: 'Escalado a N2',
@@ -148,7 +152,7 @@ export const MOCK_TICKETS: Ticket[] = [
     ],
   },
   {
-    id: 'FK-0962',
+    id: 'ST-0962',
     titulo: 'Error 500 al generar reporte de cartera',
     solicitante: 'Sara Beltrán',
     empresa: 'Beltrán Import Export',
@@ -164,7 +168,7 @@ export const MOCK_TICKETS: Ticket[] = [
     ],
   },
   {
-    id: 'FK-0965',
+    id: 'ST-0965',
     titulo: 'Solicitud de ajuste en línea de crédito aprobada',
     solicitante: 'Julián Torres',
     empresa: 'Torres Distribuciones',
@@ -180,9 +184,43 @@ export const MOCK_TICKETS: Ticket[] = [
     ],
   },
 
+  {
+    id: 'ST-0968',
+    titulo: 'Solicitud de reproceso de conciliación bancaria',
+    solicitante: 'Manuela Cifuentes',
+    empresa: 'Cifuentes Import',
+    estado: 'Pendiente Tech',
+    creadoEn: '2026-08-26T09:00:00',
+    prioridad: 'High',
+    rank: 'f',
+    responsable: { nombre: 'Andrea Salcedo', nivel: 'N2' },
+    historial: [
+      { estado: 'En espera', fecha: '2026-08-26T09:00:00' },
+      { estado: 'En revisión N1', fecha: '2026-08-26T09:20:00' },
+      { estado: 'Escalado a N2', fecha: '2026-08-26T10:00:00' },
+      { estado: 'Pendiente Tech', fecha: '2026-08-26T10:05:00' },
+    ],
+  },
+  {
+    id: 'ST-0970',
+    titulo: 'Ajuste de parámetros de scoring para nuevo cliente',
+    solicitante: 'Tomás Herrera',
+    estado: 'Pendiente Tech',
+    creadoEn: '2026-08-26T11:00:00',
+    prioridad: 'Medium',
+    rank: 'g',
+    responsable: { nombre: 'Santiago Vélez', nivel: 'N2' },
+    historial: [
+      { estado: 'En espera', fecha: '2026-08-26T11:00:00' },
+      { estado: 'En revisión N1', fecha: '2026-08-26T11:15:00' },
+      { estado: 'Escalado a N2', fecha: '2026-08-26T11:45:00' },
+      { estado: 'Pendiente Tech', fecha: '2026-08-26T11:50:00' },
+    ],
+  },
+
   // Pendiente cliente
   {
-    id: 'FK-0940',
+    id: 'ST-0940',
     titulo: 'Falta soporte de la operación para continuar el trámite',
     solicitante: 'Esteban Duarte',
     empresa: 'Duarte Comercial',
@@ -196,7 +234,7 @@ export const MOCK_TICKETS: Ticket[] = [
     ],
   },
   {
-    id: 'FK-0942',
+    id: 'ST-0942',
     titulo: 'Verificación de identidad pendiente',
     solicitante: 'Natalia Bravo',
     estado: 'Pendiente cliente',
@@ -209,7 +247,7 @@ export const MOCK_TICKETS: Ticket[] = [
     ],
   },
   {
-    id: 'FK-0948',
+    id: 'ST-0948',
     titulo: 'Necesita confirmar el NIT de facturación',
     solicitante: 'Camilo Restrepo',
     empresa: 'Restrepo & Cía',
@@ -223,7 +261,7 @@ export const MOCK_TICKETS: Ticket[] = [
     ],
   },
   {
-    id: 'FK-0951',
+    id: 'ST-0951',
     titulo: 'Requiere evidencia de pago para continuar el proceso',
     solicitante: 'Isabel Nova',
     empresa: 'Nova Exportaciones',

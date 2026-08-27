@@ -5,15 +5,18 @@ import { useSearch } from '../../hooks/useSearch'
 import { MOCK_TICKETS } from '../../lib/mockTickets'
 import type { Ticket, TicketStatus } from '../../types/ticket'
 
-// "En espera" queda fuera de esta vista por definición (sin agente asignado) —
-// REQUIREMENTS.md §5 "Vista kanban por agente en Nivel 1 – Revisión". Sigue visible
-// solo en el Tablero general hasta que un agente lo toma.
-const NIVEL1_ESTADOS: TicketStatus[] = ['En revisión N1', 'En validación']
+// El criterio de esta vista es tener agente asignado, no un estado específico
+// (REQUIREMENTS.md §4/§5): un "En espera" ya asignado en Jira SÍ aparece en la columna
+// de su agente, aunque conserve el estado "En espera" (sin historial ni botón "Ver
+// detalle" — eso sigue dependiendo del estado, sección 6). Solo los "En espera" sin
+// agente asignado quedan fuera, visibles únicamente en el Tablero general.
+const NIVEL1_ESTADOS: TicketStatus[] = ['En espera', 'En revisión N1', 'En validación']
 
 function getAsignacionKey(ticket: Ticket): number {
-  // "Hora de asignación al agente" = cuándo entró al estado actual (primera revisión
-  // o retorno para validación); ambos casos tienen entrada de historial porque ya
-  // pasaron por "En espera" antes de llegar aquí.
+  // "Hora de asignación al agente" = cuándo entró al estado actual (primera revisión o
+  // retorno para validación), tomado del historial. Los "En espera" ya asignados no
+  // tienen historial (regla de negocio) ni una hora de asignación exacta en Jira sin el
+  // changelog (diferido) — se usa la hora de creación como aproximación mientras tanto.
   const fecha = ticket.historial?.at(-1)?.fecha ?? ticket.creadoEn
   return new Date(fecha).getTime()
 }
