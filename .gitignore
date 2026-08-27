@@ -1,0 +1,30 @@
+# Entorno
+.env
+*.env
+.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+dist/
+.pytest_cache/
+
+# Node
+node_modules/
+frontend/dist/
+frontend/build/
+.npm
+
+# Docker
+*.log
+
+# VS Code
+.vscode/settings.json
+
+# Windows
+Thumbs.db
+desktop.ini
