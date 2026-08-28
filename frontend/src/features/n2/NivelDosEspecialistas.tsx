@@ -69,15 +69,15 @@ function NivelDosEspecialistas({ tickets }: NivelDosEspecialistasProps) {
           onToggleTicketDetail={toggleDetalle}
         />
         <TicketListColumn
-          title="Pendiente Tech"
-          tickets={pendienteTech}
+          title="En curso"
+          tickets={enCurso}
           matchedIds={matchedIds}
           expandedTicketId={expandedTicketId}
           onToggleTicketDetail={toggleDetalle}
         />
         <TicketListColumn
-          title="En curso"
-          tickets={enCurso}
+          title="Pendiente Tech"
+          tickets={pendienteTech}
           matchedIds={matchedIds}
           expandedTicketId={expandedTicketId}
           onToggleTicketDetail={toggleDetalle}

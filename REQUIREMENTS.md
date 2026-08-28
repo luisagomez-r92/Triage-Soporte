@@ -47,7 +47,7 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
 |---|---|---|
 | Tablero general | Vista kanban: N0, Nivel 1, Nivel 2, Pendiente. Incluye buscador global. | Por columna según nivel |
 | Nivel 1 – Revisión | Vista kanban con una columna por agente de N1. Cada columna lista TODOS los casos con esa persona como responsable (En espera ya asignados, En revisión N1, En validación) — el criterio es tener agente asignado, no el estado del ticket. Los "en espera" que aún NO tienen agente asignado no aparecen aquí — se ven solo en el Tablero general hasta que alguien los toma. | Dentro de cada columna: por hora de asignación al agente (el primero asignado aparece primero) |
-| Nivel 2 – Especialistas | Vista de tres columnas: "Escalados" (en cola, esperando ser tomados), "Pendiente Tech" (esperando que Tech lo tome, variante de escalado) y "En curso" (ya tomados por un desarrollador). | Columnas "Escalados" y "Pendiente Tech": por campo Rank de Jira. Columna "En curso": por hora de asignación al desarrollador |
+| Nivel 2 – Especialistas | Vista de tres columnas, en este orden de izquierda a derecha: "Escalados" (en cola, esperando ser tomados), "En curso" (ya tomados por un desarrollador), "Pendiente Tech" (esperando que Tech lo tome, variante de escalado). | Columnas "Escalados" y "Pendiente Tech": por campo Rank de Jira. Columna "En curso": por hora de asignación al desarrollador |
 | Pendiente cliente | Tickets pausados esperando respuesta, con tiempo transcurrido visible. | Por hora en que pasó a pendiente |
 
 ### Columnas del Tablero general
@@ -56,31 +56,36 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
 |---|---|
 | Nivel 0 – Nuevos | Recién creados, estado "En espera" (puede o no tener responsable ya asignado en Jira). FIFO estricto por hora de llegada. |
 | Nivel 1 – Revisión | En atención por N1. Incluye casos en validación (borde verde izq.). |
-| Nivel 2 – Especialistas | En curso (borde azul) y en cola, esta última ordenada por el campo Rank de Jira. Máx. 3 visibles, resto colapsado ("Ver más"). *(Esta es la columna única del Tablero general — no confundir con la vista de tres columnas "Escalados"/"Pendiente Tech"/"En curso" de la pestaña Nivel 2 – Especialistas, ver sección 5).* |
-| Pendiente cliente | Con tiempo sin respuesta visible en la tarjeta. |
+| Nivel 2 – Especialistas | En curso (borde azul) y en cola, esta última ordenada por el campo Rank de Jira. Máx. 3 visibles, resto colapsado ("Ver más"). **Badge de prioridad (Critical/High/Medium/Low) visible en cada tarjeta**, igual que en la pestaña dedicada de Nivel 2 (sección 5). *(Esta es la columna única del Tablero general — no confundir con la vista de tres columnas "Escalados"/"En curso"/"Pendiente Tech" de la pestaña Nivel 2 – Especialistas, ver sección 5).* |
+| Pendiente cliente | Con tiempo sin respuesta visible en la tarjeta, **incluyendo el color escalonado y la alerta crítica** definidos en la sección 5 ("Alerta de tiempo crítico en Pendiente cliente") — no solo un texto plano. |
 
 ## 5. Funcionalidades principales
 
 **Buscador global** (presente en todas las pestañas)
+- Contador estático "Todos los casos [N]" siempre visible junto al buscador (N = total de
+  tickets activos en esa pestaña), independiente de si se está buscando algo o no. Aplica
+  también al **Tablero general** — no es exclusivo de las pestañas de detalle.
 - Busca por número de ticket (ST-XXXX) o nombre del solicitante.
 - Tablero: resalta coincidencias, atenúa el resto; lista resultados con su columna de origen.
 - Pestañas de detalle: filtra tickets visibles; si la pestaña activa no tiene resultados,
   navega automáticamente a la correcta con banner informativo.
 - Tickets colapsados se expanden automáticamente al buscar.
-- Muestra conteo de resultados en tiempo real.
+- Muestra conteo de resultados en tiempo real (este es un conteo aparte del "Todos los casos
+  [N]" de arriba — aparece solo mientras se está escribiendo algo en el buscador).
 
 **Vista de tres columnas en Nivel 2 – Especialistas**
 
 - La pestaña "Nivel 2 – Especialistas" se organiza en **tres columnas**, no una lista con
-  sección colapsable como antes:
+  sección colapsable como antes. **Orden de izquierda a derecha: Escalados → En curso →
+  Pendiente Tech.**
   - **Columna "Escalados":** tickets en cola, esperando ser **tomados** (iniciados) por el
-    desarrollador. Orden: por el campo **Rank de Jira** (ver sección 6 y 9 — no recalcular
-    prioridad + hora manualmente, respetar el orden que llega del API).
+    desarrollador. Orden interno: por el campo **Rank de Jira** (ver sección 6 y 9 — no
+    recalcular prioridad + hora manualmente, respetar el orden que llega del API).
+  - **Columna "En curso":** tickets ya tomados, en trabajo activo. Borde azul izquierdo
+    (regla de la sección 6). Orden interno: por hora en que el desarrollador tomó el ticket.
   - **Columna "Pendiente Tech":** variante de "Escalado a N2" — tickets esperando a que un
     agente de Tech los tome, correspondiente al status real de Jira "Pendiente" (columna
-    PENDIENTE TECH). Mismo criterio de orden que "Escalados" (campo Rank de Jira).
-  - **Columna "En curso":** tickets ya tomados, en trabajo activo. Borde azul izquierdo
-    (regla de la sección 6). Orden: por hora en que el desarrollador tomó el ticket.
+    PENDIENTE TECH). Mismo criterio de orden interno que "Escalados" (campo Rank de Jira).
 - **Todo ticket escalado a N2 ya tiene un especialista asignado en Jira desde el momento del
   escalado**, incluso si aún está en la columna "Escalados" o "Pendiente Tech" sin tomar. La
   tarjeta debe mostrar avatar + nombre del responsable en **las tres** columnas — la
@@ -183,10 +188,13 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
   "Todos los casos [N]" arriba de los grupos, igual que en el Tablero general.
 
 **Modal de detalle** (click en tarjeta del Tablero general)
-- Barra de progreso, tarjetas de tiempo global y estado, responsable asignado (avatar + badge
-  de nivel), historial completo con línea de tiempo vertical.
+- Barra de progreso **con el porcentaje numérico visible** (ej. "60%"), tarjetas de tiempo
+  global y estado, responsable asignado (avatar + badge de nivel), historial completo con
+  línea de tiempo vertical.
 
 **Panel de detalle desplegable** (botón "Ver detalle" en pestañas N1, N2, Pendiente)
+- Barra de progreso **con el porcentaje numérico visible** (misma regla que en el Modal —
+  nunca mostrar la barra sin el número al lado).
 - Dos tarjetas de tiempo (global y estado actual), tarjeta de responsable con badge de nivel,
   historial con línea de tiempo.
 - Alertas contextuales para tickets en validación y en apoyo por desborde.
@@ -258,6 +266,21 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
   y texto/ícono navy `#1A1D4E`.
 - **Pestañas:** inactiva = texto gris plano sin fondo/borde; activa = fondo lavanda `#E8EAF5`,
   borde inferior navy `#1A1D4E` de 2.5px, esquinas superiores redondeadas (6px).
+
+### Layout general — encabezado de marca y sidebar (pendiente de construir)
+
+> Estos elementos están definidos en color/estilo desde el prototipo original, pero aún no
+> se han construido como componentes — hoy la app solo muestra el contenido de las pestañas
+> sin este marco alrededor.
+
+- **Encabezado superior izquierdo:** logo "finkargo®" (texto o logo de marca), visible en
+  todas las pantallas de la app, no solo en una pestaña.
+- **Sidebar de navegación lateral:** columna fija a la izquierda, fondo `#2D3172`, con al
+  menos un ítem "Triage de Soporte" (el módulo actual) con su ícono, siguiendo el estilo de
+  la tabla de colores de esta sección. Pensado como espacio para futuros módulos/apps
+  adicionales de Finkargo en la misma barra, aunque hoy solo tenga este ítem.
+- Este encabezado + sidebar envuelve a las 4 pestañas existentes (Tablero general, Nivel 1,
+  Nivel 2, Pendiente cliente) — no las reemplaza ni cambia su navegación interna.
 
 ## 8. Fuera del alcance – Módulo 1
 
@@ -338,16 +361,27 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
     incorrecta. Una vez esté disponible el historial (changelog), se puede resolver
     tomando el último nivel conocido antes de pasar a "Pendiente cliente".
 
-### Historial del ticket — diferido a un paso posterior
+### Historial del ticket — implementación
 
 - El endpoint de listado de issues del tablero (Agile API) **no** incluye el changelog
   (historial de cambios de estado). Obtenerlo requiere una llamada aparte por ticket:
   `GET /rest/api/3/issue/{id}?expand=changelog`.
-- Con ~27 tickets activos, es viable pedirlo por ticket sin problema de volumen, pero
-  implica una llamada extra por ticket en cada refresh — se implementará en un paso
-  posterior. Mientras tanto, el campo `historial` de la transformación queda como
-  `undefined`, y el Modal de detalle / Panel de detalle desplegable deben manejar ese caso
-  sin romperse (ej. mostrar "Historial no disponible" en vez de una lista vacía o un error).
+- **Estrategia: carga bajo demanda (lazy), no parte del polling general.** Pedir el
+  historial de los ~27 tickets activos en cada ciclo de polling (cada 30s) sería una
+  sobrecarga innecesaria a la API de Jira. En su lugar:
+  - El historial se solicita **solo cuando el usuario abre** el Modal de detalle o el
+    Panel de detalle desplegable de un ticket específico (endpoint propio, ej.
+    `GET /api/jira/tickets/:id/history` en el backend, que a su vez llama al endpoint de
+    Jira de arriba).
+  - Mientras se carga, mostrar un estado de "Cargando historial…" dentro del modal/panel
+    (no bloquear el resto de la información que ya se muestra).
+  - Si la llamada falla, mostrar "Historial no disponible" (mismo mensaje que se usaba
+    como placeholder) en vez de romper el modal/panel.
+  - Una vez cargado, mostrarlo en la línea de tiempo vertical ya construida en el
+    Modal/Panel (diseño ya implementado, solo faltan los datos reales).
+- Este historial no se guarda en el store principal de tickets (el que alimenta las 4
+  pestañas) — vive únicamente en el estado local del componente Modal/Panel mientras está
+  abierto, para no complicar el polling general.
 
 ## 10. Próximos pasos
 

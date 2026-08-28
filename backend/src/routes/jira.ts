@@ -1,9 +1,32 @@
-import { Router } from 'express'
+import { Router, type Response } from 'express'
 import { MissingJiraConfigError } from '../env'
-import { JiraApiError, getActiveBoardIssues } from '../jira/jiraClient'
-import { mapJiraIssuesToTickets } from '../jira/mapper'
+import { JiraApiError, getActiveBoardIssues, getIssueChangelog } from '../jira/jiraClient'
+import { mapChangelogToHistory, mapJiraIssuesToTickets } from '../jira/mapper'
 
 const router = Router()
+
+// Manejo de errores compartido entre las rutas de este router: distingue "nuestro
+// servidor mal configurado" (falta .env) de "Jira respondió con error" (credenciales,
+// ticket inexistente, etc. — 502 porque el problema es de la integración upstream).
+function handleJiraError(error: unknown, res: Response) {
+  if (error instanceof MissingJiraConfigError) {
+    res.status(500).json({ ok: false, error: error.message })
+    return
+  }
+
+  if (error instanceof JiraApiError) {
+    res.status(502).json({
+      ok: false,
+      error: error.message,
+      jiraStatus: error.status || undefined,
+      jiraResponse: error.jiraResponse,
+    })
+    return
+  }
+
+  console.error('Error inesperado consultando Jira:', error)
+  res.status(500).json({ ok: false, error: 'Error inesperado al consultar Jira' })
+}
 
 // GET /api/jira/test — confirma que las credenciales del .env funcionan y muestra el
 // mapeo de tickets activos del tablero (Jira crudo -> shape del frontend), para
@@ -25,27 +48,20 @@ router.get('/test', async (_req, res) => {
       raw: data,
     })
   } catch (error) {
-    if (error instanceof MissingJiraConfigError) {
-      // Falta config local — no es un fallo de Jira, es nuestro servidor mal configurado.
-      res.status(500).json({ ok: false, error: error.message })
-      return
-    }
+    handleJiraError(error, res)
+  }
+})
 
-    if (error instanceof JiraApiError) {
-      // Jira respondió pero con error (credenciales inválidas, tablero inexistente,
-      // etc.) — 502 porque el problema es de la integración upstream, no de quien
-      // llamó a nuestro endpoint.
-      res.status(502).json({
-        ok: false,
-        error: error.message,
-        jiraStatus: error.status || undefined,
-        jiraResponse: error.jiraResponse,
-      })
-      return
-    }
-
-    console.error('Error inesperado consultando Jira:', error)
-    res.status(500).json({ ok: false, error: 'Error inesperado al consultar Jira' })
+// GET /api/jira/tickets/:id/history — historial bajo demanda (REQUIREMENTS.md §9): solo
+// se llama cuando el usuario abre el Modal/Panel de detalle de un ticket específico, no
+// como parte del polling general de /test.
+router.get('/tickets/:id/history', async (req, res) => {
+  try {
+    const issue = await getIssueChangelog(req.params.id)
+    const historial = mapChangelogToHistory(issue.fields.created, issue.changelog.histories)
+    res.json({ ok: true, historial })
+  } catch (error) {
+    handleJiraError(error, res)
   }
 })
 

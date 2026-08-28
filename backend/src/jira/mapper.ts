@@ -1,4 +1,4 @@
-import type { Ticket, TicketNivel, TicketPriority, TicketStatus } from './ticket'
+import type { Ticket, TicketHistoryEntry, TicketNivel, TicketPriority, TicketStatus } from './ticket'
 
 // Campos que pedimos a la API Agile — ver REQUIREMENTS.md §9 ("Mapeo de estados Jira →
 // REQUIREMENTS.md — CONFIRMADO"). customfield_10019 = Rank, customfield_10076 = Company.
@@ -32,8 +32,10 @@ export interface JiraIssue {
   }
 }
 
-// REQUIREMENTS.md §9 "Mapeo de estados Jira → REQUIREMENTS.md — CONFIRMADO".
-const ESTADO_BY_JIRA_STATUS: Record<string, TicketStatus> = {
+// REQUIREMENTS.md §9 "Mapeo de estados Jira → REQUIREMENTS.md — CONFIRMADO". Exportado
+// porque mapChangelogToHistory() (historial bajo demanda) usa el mismo mapa — una sola
+// fuente de verdad para "status de Jira -> estado de la app".
+export const ESTADO_BY_JIRA_STATUS: Record<string, TicketStatus> = {
   'Esperando por ayuda': 'En espera',
   'Gestión Nivel 1': 'En revisión N1',
   'Escalado Nivel 2': 'Escalado a N2',
@@ -121,4 +123,38 @@ export function mapJiraIssuesToTickets(issues: JiraIssue[]): MapResult {
   }
 
   return { tickets, unmapped }
+}
+
+export interface JiraChangelogHistoryItem {
+  field: string
+  toString: string | null
+}
+
+export interface JiraChangelogHistory {
+  created: string
+  items: JiraChangelogHistoryItem[]
+}
+
+// REQUIREMENTS.md §9 "Historial del ticket — implementación": el changelog de Jira solo
+// registra transiciones (no el estado inicial al crear el ticket), así que se antepone
+// una entrada sintética "En espera" en `created`. Solo se quedan los items de campo
+// "status" — el changelog trae cambios de todos los campos (assignee, priority, etc.).
+// Los toString que no mapean a un estado conocido (ej. transiciones hacia
+// Resuelto/Cerrada/Cancelado, fuera del alcance de la cola activa) se omiten en vez de
+// romper la línea de tiempo.
+export function mapChangelogToHistory(
+  createdAt: string,
+  histories: JiraChangelogHistory[],
+): TicketHistoryEntry[] {
+  const transiciones = [...histories]
+    .sort((a, b) => new Date(a.created).getTime() - new Date(b.created).getTime())
+    .flatMap((history) =>
+      history.items
+        .filter((item) => item.field === 'status' && item.toString)
+        .map((item) => ({ toString: item.toString as string, fecha: history.created })),
+    )
+    .map(({ toString, fecha }) => ({ estado: ESTADO_BY_JIRA_STATUS[toString], fecha }))
+    .filter((entry): entry is TicketHistoryEntry => Boolean(entry.estado))
+
+  return [{ estado: 'En espera', fecha: createdAt }, ...transiciones]
 }
