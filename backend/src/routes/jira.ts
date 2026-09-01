@@ -1,6 +1,11 @@
 import { Router, type Response } from 'express'
 import { MissingJiraConfigError } from '../env'
-import { JiraApiError, getActiveBoardIssues, getIssueChangelog } from '../jira/jiraClient'
+import {
+  JiraApiError,
+  getActiveBoardIssues,
+  getIssueChangelog,
+  getIssueStatusCategory,
+} from '../jira/jiraClient'
 import { mapChangelogToHistory, mapJiraIssuesToTickets } from '../jira/mapper'
 
 const router = Router()
@@ -60,6 +65,18 @@ router.get('/tickets/:id/history', async (req, res) => {
     const issue = await getIssueChangelog(req.params.id)
     const historial = mapChangelogToHistory(issue.fields.created, issue.changelog.histories)
     res.json({ ok: true, historial })
+  } catch (error) {
+    handleJiraError(error, res)
+  }
+})
+
+// GET /api/jira/tickets/:id/status — consulta puntual, solo cuando el buscador no
+// encuentra el ticket en el set de activos ya cargado (REQUIREMENTS.md §5 "Mensajes de
+// búsqueda según estado del ticket", casos 2 y 3).
+router.get('/tickets/:id/status', async (req, res) => {
+  try {
+    const result = await getIssueStatusCategory(req.params.id)
+    res.json({ ok: true, ...result })
   } catch (error) {
     handleJiraError(error, res)
   }

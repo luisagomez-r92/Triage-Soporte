@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react'
 import SearchBar from '../../components/SearchBar'
+import SearchStatusMessage from '../../components/SearchStatusMessage'
 import TicketListColumn from '../../components/TicketListColumn'
 import { useSearch } from '../../hooks/useSearch'
+import { useTicketSearchMessage } from '../../hooks/useTicketSearchMessage'
 import type { Ticket, TicketStatus } from '../../types/ticket'
 
 // El criterio de esta vista es tener agente asignado, no un estado específico
@@ -30,6 +32,7 @@ function NivelUnoRevision({ tickets }: NivelUnoRevisionProps) {
       NIVEL1_ESTADOS.includes(ticket.estado) && Boolean(ticket.responsable),
   )
   const { query, setQuery, matchedIds, resultCount } = useSearch(nivelUnoTickets)
+  const { message: searchMessage } = useTicketSearchMessage(query, resultCount, tickets)
   const [expandedTicketId, setExpandedTicketId] = useState<string | null>(null)
 
   const visibleTickets = matchedIds
@@ -53,17 +56,21 @@ function NivelUnoRevision({ tickets }: NivelUnoRevisionProps) {
   }, [visibleTickets])
 
   return (
-    <div className="bg-fondo p-6">
-      <div className="mb-4 flex items-center gap-2">
-        <h1 className="text-sm font-semibold text-navy">Todos los casos</h1>
-        <span className="rounded-full bg-lavanda px-2 py-0.5 text-xs font-medium text-navy">
-          {nivelUnoTickets.length}
-        </span>
+    <div className="bg-white p-6">
+      <div className="mb-4">
+        <SearchBar
+          totalCount={nivelUnoTickets.length}
+          query={query}
+          onQueryChange={setQuery}
+          resultCount={resultCount}
+        />
       </div>
 
-      <div className="mb-4">
-        <SearchBar query={query} onQueryChange={setQuery} resultCount={resultCount} />
-      </div>
+      {resultCount === 0 && (
+        <div className="mb-4">
+          <SearchStatusMessage message={searchMessage} />
+        </div>
+      )}
 
       <div className="flex gap-4 overflow-x-auto pb-2">
         {columnas.map(({ agente, tickets }) => (

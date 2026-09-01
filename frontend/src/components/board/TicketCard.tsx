@@ -3,6 +3,7 @@ import Avatar from '../Avatar'
 import StatusChip from '../StatusChip'
 import TicketDetailPanel from '../TicketDetailPanel'
 import TicketValidationAlert from '../TicketValidationAlert'
+import TicketWaitingTime from '../TicketWaitingTime'
 import { getLeftBorderClass } from '../../lib/ticketBorderColor'
 import type { Ticket } from '../../types/ticket'
 
@@ -48,7 +49,7 @@ function TicketCard({ ticket, matchState, detailTrigger }: TicketCardProps) {
       tabIndex={isCardClickable ? 0 : undefined}
       onClick={isCardClickable ? () => detailTrigger.onOpenDetail(ticket) : undefined}
       onKeyDown={isCardClickable ? handleCardKeyDown : undefined}
-      className={`rounded-lg border border-l-4 border-gray-200 bg-white p-3 transition-opacity ${leftBorder} ${searchClasses} ${
+      className={`rounded-lg border border-l-4 border-gray-300 bg-fondo p-3 shadow-sm transition-opacity ${leftBorder} ${searchClasses} ${
         isCardClickable ? 'cursor-pointer' : ''
       }`}
     >
@@ -56,17 +57,25 @@ function TicketCard({ ticket, matchState, detailTrigger }: TicketCardProps) {
         <span className="font-mono text-sm font-semibold text-navy">
           {ticket.id}
         </span>
-        <StatusChip estado={ticket.estado} />
+        <div className="flex flex-shrink-0 items-center gap-1.5">
+          <StatusChip estado={ticket.estado} />
+        </div>
       </div>
-      <p className="mt-1 text-sm text-gray-600">{ticket.solicitante}</p>
-      <div className="mt-3 flex items-center justify-between">
+      <p className="mt-1 line-clamp-2 break-words text-sm font-semibold text-navy">{ticket.titulo}</p>
+      <p className="mt-0.5 line-clamp-2 break-words text-xs text-gray-600">{ticket.solicitante}</p>
+      {ticket.estado === 'Pendiente cliente' && (
+        <div className="mt-1">
+          <TicketWaitingTime ticket={ticket} />
+        </div>
+      )}
+      <div className="mt-3 flex items-center justify-between gap-2">
         {ticket.responsable ? (
-          <div className="flex items-center gap-1.5">
+          <div className="flex min-w-0 items-center gap-1.5">
             <Avatar
               nombre={ticket.responsable.nombre}
               avatarUrl={ticket.responsable.avatarUrl}
             />
-            <span className="text-xs text-gray-500">
+            <span className="truncate text-xs text-gray-500">
               {ticket.responsable.nombre}
             </span>
           </div>
@@ -74,13 +83,13 @@ function TicketCard({ ticket, matchState, detailTrigger }: TicketCardProps) {
           <span />
         )}
         {puedeVerDetalle && isModalTrigger && (
-          <span className="text-xs font-medium text-accent">Ver detalle</span>
+          <span className="flex-shrink-0 text-xs font-medium text-accent">Ver detalle</span>
         )}
         {puedeVerDetalle && !isModalTrigger && (
           <button
             type="button"
             onClick={() => detailTrigger.onToggle()}
-            className="text-xs font-medium text-accent hover:underline"
+            className="flex-shrink-0 text-xs font-medium text-accent hover:underline"
           >
             {detailTrigger.expanded ? 'Ocultar detalle' : 'Ver detalle'}
           </button>

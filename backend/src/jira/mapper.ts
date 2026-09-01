@@ -77,6 +77,15 @@ export interface MapResult {
   unmapped: { key: string; statusName: string }[]
 }
 
+// REQUIREMENTS.md §5 "Título de la tarjeta (asunto)": Jira suele traer `summary` en
+// MAYÚSCULAS o con capitalización inconsistente — se normaliza a "tipo oración" (solo la
+// primera letra en mayúscula) sin importar cómo venga escrito en Jira.
+function toSentenceCase(text: string): string {
+  const trimmed = text.trim()
+  if (!trimmed) return trimmed
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase()
+}
+
 export function mapJiraIssueToTicket(issue: JiraIssue): Ticket | null {
   const estado = ESTADO_BY_JIRA_STATUS[issue.fields.status.name]
   if (!estado) return null
@@ -96,7 +105,7 @@ export function mapJiraIssueToTicket(issue: JiraIssue): Ticket | null {
 
   return {
     id: issue.key,
-    titulo: issue.fields.summary,
+    titulo: toSentenceCase(issue.fields.summary),
     solicitante: issue.fields.reporter?.displayName ?? '',
     empresa: issue.fields.customfield_10076 ?? undefined,
     estado,

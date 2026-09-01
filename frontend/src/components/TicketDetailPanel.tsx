@@ -1,10 +1,12 @@
 import Avatar from './Avatar'
 import LevelBadge from './LevelBadge'
 import PendienteClienteAlertCard from './PendienteClienteAlertCard'
+import ProgressBar from './ProgressBar'
 import TicketHistoryTimeline from './TicketHistoryTimeline'
 import TimeElapsedCard from './TimeElapsedCard'
 import { useTicketHistory } from '../hooks/useTicketHistory'
 import { formatDuration } from '../lib/time'
+import { PROGRESS_BY_STATUS } from '../lib/ticketProgress'
 import type { Ticket } from '../types/ticket'
 
 interface TicketDetailPanelProps {
@@ -26,6 +28,15 @@ function TicketDetailPanel({ ticket }: TicketDetailPanelProps) {
 
   return (
     <div className="flex flex-col gap-3">
+      {/* Barra de progreso adicional a la de la tarjeta de lista (REQUIREMENTS.md §5,
+          "Panel de detalle desplegable") — con el porcentaje numérico visible. */}
+      <div className="flex items-center gap-2">
+        <div className="flex-1">
+          <ProgressBar percent={PROGRESS_BY_STATUS[ticket.estado]} />
+        </div>
+        <span className="text-xs text-gray-400">{PROGRESS_BY_STATUS[ticket.estado]}%</span>
+      </div>
+
       <div className="grid grid-cols-2 gap-3">
         <TimeElapsedCard label="Tiempo total" value={formatDuration(ticket.creadoEn)} />
         {isPendienteCliente ? (

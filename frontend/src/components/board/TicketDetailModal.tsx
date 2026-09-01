@@ -1,8 +1,6 @@
 import { useEffect } from 'react'
-import ProgressBar from '../ProgressBar'
 import StatusChip from '../StatusChip'
 import TicketDetailPanel from '../TicketDetailPanel'
-import { PROGRESS_BY_STATUS } from '../../lib/ticketProgress'
 import type { Ticket } from '../../types/ticket'
 
 interface TicketDetailModalProps {
@@ -46,10 +44,8 @@ function TicketDetailModal({ ticket, onClose }: TicketDetailModalProps) {
           </div>
         </div>
 
-        <div className="mt-4">
-          <ProgressBar percent={PROGRESS_BY_STATUS[ticket.estado]} />
-        </div>
-
+        {/* La barra de progreso ya la muestra TicketDetailPanel — mostrarla también aquí
+            duplicaría el mismo dato dos veces en el mismo diálogo (REQUIREMENTS.md §5). */}
         <div className="mt-4">
           <TicketDetailPanel ticket={ticket} />
         </div>

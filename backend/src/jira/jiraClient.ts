@@ -22,6 +22,44 @@ export interface JiraIssueWithChangelog {
   changelog: { histories: JiraChangelogHistory[] }
 }
 
+// Fallos de red (ENOTFOUND, fetch failed, etc.) al conectar con Jira son intermitentes
+// en este entorno (DNS del proxy corporativo) — el segundo intento casi siempre
+// funciona. 3 intentos en total, con una pausa corta entre cada uno, antes de darnos
+// por vencidos y lanzar el error al usuario.
+const MAX_FETCH_ATTEMPTS = 3
+const RETRY_DELAY_MS = 1000
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+async function fetchWithRetry(url: string, authHeader: string): Promise<Response> {
+  for (let attempt = 1; attempt <= MAX_FETCH_ATTEMPTS; attempt++) {
+    try {
+      return await fetch(url, {
+        headers: {
+          Authorization: authHeader,
+          Accept: 'application/json',
+        },
+      })
+    } catch (cause) {
+      console.error(
+        `Fallo de red al conectar con Jira (intento ${attempt}/${MAX_FETCH_ATTEMPTS}):`,
+        cause,
+        'cause:',
+        cause instanceof Error ? cause.cause : undefined,
+      )
+      if (attempt === MAX_FETCH_ATTEMPTS) {
+        const message = cause instanceof Error ? cause.message : String(cause)
+        throw new JiraApiError(0, `No se pudo conectar con Jira: ${message}`)
+      }
+      await sleep(RETRY_DELAY_MS)
+    }
+  }
+  // Inalcanzable: el loop siempre retorna o lanza en el último intento.
+  throw new JiraApiError(0, 'No se pudo conectar con Jira')
+}
+
 // GET contra la API de Jira con las credenciales de .env — comparte el manejo de
 // errores (conexión fallida vs. respuesta de error de Jira) entre todas las llamadas.
 async function getJiraJson<T>(path: string): Promise<T> {
@@ -29,18 +67,7 @@ async function getJiraJson<T>(path: string): Promise<T> {
   const url = `${baseUrl.replace(/\/+$/, '')}${path}`
   const authHeader = `Basic ${Buffer.from(`${email}:${apiToken}`).toString('base64')}`
 
-  let response: Response
-  try {
-    response = await fetch(url, {
-      headers: {
-        Authorization: authHeader,
-        Accept: 'application/json',
-      },
-    })
-  } catch (cause) {
-    const message = cause instanceof Error ? cause.message : String(cause)
-    throw new JiraApiError(0, `No se pudo conectar con Jira: ${message}`)
-  }
+  const response = await fetchWithRetry(url, authHeader)
 
   if (!response.ok) {
     let jiraResponse: unknown
@@ -76,6 +103,46 @@ export async function getActiveBoardIssues(): Promise<JiraBoardIssuesResponse> {
   return getJiraJson<JiraBoardIssuesResponse>(
     `/rest/agile/1.0/board/${boardId}/issue?${params.toString()}`,
   )
+}
+
+export interface JiraIssueStatusLookup {
+  found: boolean
+  // statusCategory.key: 'new' | 'indeterminate' | 'done'. Ausente cuando found=false.
+  statusCategoryKey?: string
+}
+
+// GET /rest/api/3/issue/{id}?fields=status — consulta puntual de UN ticket por su key,
+// para el buscador (REQUIREMENTS.md §5 "Mensajes de búsqueda según estado del ticket").
+// A diferencia de getJiraJson(), un 404 aquí NO es un error — es la respuesta válida
+// "el ticket no existe" (caso 3 de la sección 5), así que se maneja aparte en vez de
+// lanzar JiraApiError.
+export async function getIssueStatusCategory(issueIdOrKey: string): Promise<JiraIssueStatusLookup> {
+  const { baseUrl, email, apiToken } = getJiraConfig()
+  const url = `${baseUrl.replace(/\/+$/, '')}/rest/api/3/issue/${encodeURIComponent(issueIdOrKey)}?fields=status`
+  const authHeader = `Basic ${Buffer.from(`${email}:${apiToken}`).toString('base64')}`
+
+  const response = await fetchWithRetry(url, authHeader)
+
+  if (response.status === 404) {
+    return { found: false }
+  }
+
+  if (!response.ok) {
+    let jiraResponse: unknown
+    try {
+      jiraResponse = await response.json()
+    } catch {
+      jiraResponse = undefined
+    }
+    throw new JiraApiError(
+      response.status,
+      `Jira respondió con error ${response.status} ${response.statusText}`,
+      jiraResponse,
+    )
+  }
+
+  const data = (await response.json()) as { fields: { status: { statusCategory: { key: string } } } }
+  return { found: true, statusCategoryKey: data.fields.status.statusCategory.key }
 }
 
 // GET /rest/api/3/issue/{id}?expand=changelog — API core v3 (no la Agile: el changelog

@@ -45,9 +45,14 @@ function TableroGeneral({ tickets }: TableroGeneralProps) {
     : []
 
   return (
-    <div className="bg-fondo p-6">
+    <div className="bg-white p-6">
       <div className="mb-4">
-        <SearchBar query={query} onQueryChange={setQuery} resultCount={resultCount} />
+        <SearchBar
+          totalCount={tickets.length}
+          query={query}
+          onQueryChange={setQuery}
+          resultCount={resultCount}
+        />
       </div>
       {matchedIds && (
         <div className="mb-4">

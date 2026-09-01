@@ -56,22 +56,48 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
 |---|---|
 | Nivel 0 – Nuevos | Recién creados, estado "En espera" (puede o no tener responsable ya asignado en Jira). FIFO estricto por hora de llegada. |
 | Nivel 1 – Revisión | En atención por N1. Incluye casos en validación (borde verde izq.). |
-| Nivel 2 – Especialistas | En curso (borde azul) y en cola, esta última ordenada por el campo Rank de Jira. Máx. 3 visibles, resto colapsado ("Ver más"). **Badge de prioridad (Critical/High/Medium/Low) visible en cada tarjeta**, igual que en la pestaña dedicada de Nivel 2 (sección 5). *(Esta es la columna única del Tablero general — no confundir con la vista de tres columnas "Escalados"/"En curso"/"Pendiente Tech" de la pestaña Nivel 2 – Especialistas, ver sección 5).* |
+| Nivel 2 – Especialistas | En curso (borde azul) y en cola, esta última ordenada por el campo Rank de Jira. Máx. 3 visibles, resto colapsado ("Ver más"). *(Esta es la columna única del Tablero general — no confundir con la vista de tres columnas "Escalados"/"En curso"/"Pendiente Tech" de la pestaña Nivel 2 – Especialistas, ver sección 5).* |
 | Pendiente cliente | Con tiempo sin respuesta visible en la tarjeta, **incluyendo el color escalonado y la alerta crítica** definidos en la sección 5 ("Alerta de tiempo crítico en Pendiente cliente") — no solo un texto plano. |
 
 ## 5. Funcionalidades principales
 
 **Buscador global** (presente en todas las pestañas)
+- **Estilo visual:** el contador "Todos los casos [N]" y el campo de búsqueda forman un
+  bloque visual unificado, con borde redondeado envolviendo ambos elementos y una línea
+  divisoria vertical sutil entre el contador y el input de búsqueda (ver sección 5, imagen
+  de referencia del prototipo) — no dos elementos sueltos sin relación visual entre sí.
 - Contador estático "Todos los casos [N]" siempre visible junto al buscador (N = total de
   tickets activos en esa pestaña), independiente de si se está buscando algo o no. Aplica
   también al **Tablero general** — no es exclusivo de las pestañas de detalle.
 - Busca por número de ticket (ST-XXXX) o nombre del solicitante.
 - Tablero: resalta coincidencias, atenúa el resto; lista resultados con su columna de origen.
-- Pestañas de detalle: filtra tickets visibles; si la pestaña activa no tiene resultados,
-  navega automáticamente a la correcta con banner informativo.
+- Pestañas de detalle: filtra tickets visibles dentro de la pestaña activa. **(Actualiza y
+  reemplaza la regla anterior de "navegar automáticamente" — ver "Mensajes de búsqueda según
+  estado del ticket" más abajo, con el comportamiento correcto y ya decidido.)**
 - Tickets colapsados se expanden automáticamente al buscar.
 - Muestra conteo de resultados en tiempo real (este es un conteo aparte del "Todos los casos
   [N]" de arriba — aparece solo mientras se está escribiendo algo en el buscador).
+
+**Mensajes de búsqueda según estado del ticket (pestañas de detalle: N1, N2, Pendiente)**
+
+> Cuando se busca un número de ticket específico y no aparece en la pestaña activa, la app
+> no debe limitarse a un genérico "0 resultados" — debe distinguir tres situaciones reales:
+
+1. **El ticket existe y está activo, pero en OTRA pestaña:** la app ya tiene ese ticket
+   cargado (viene en el mismo set de datos activos del polling, sección 9), solo no
+   pertenece a la pestaña donde se está buscando. Mostrar un mensaje amigable, acorde al
+   tono de la plataforma, que indique en qué pestaña sí está — ej. *"Este caso está abierto,
+   pero en Nivel 2 – Especialistas"* — sin cambiar automáticamente de pestaña (a diferencia
+   de una versión anterior de esta regla), solo informar.
+2. **El ticket existe pero ya está cerrado** (status category "Done" — fuera del filtro
+   JQL de tickets activos, ver sección 9): mostrar un mensaje distinto indicando que el
+   caso ya no aparece en el tablero porque fue cerrado — ej. *"Este caso ya fue cerrado y
+   no aparece en el tablero"*. Esto requiere una consulta aparte a Jira (por fuera del set
+   de datos activos ya cargado) para confirmar que el ticket existe y su estado real —
+   confirmar con Claude Code si es viable antes de implementar, similar a como se investigó
+   el campo Rank o el mapeo de estados.
+3. **El ticket no existe en absoluto** (ni activo ni cerrado, o el número no es válido):
+   mantener el mensaje genérico actual de "Sin resultados"/"0 resultados".
 
 **Vista de tres columnas en Nivel 2 – Especialistas**
 
@@ -92,8 +118,10 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
   diferencia con "En curso" es si el especialista ya inició el trabajo, no si tiene o no
   responsable asignado.
 - Cada columna muestra un contador de tickets en su encabezado.
-- El badge de prioridad (Critical/High/Medium/Low) es visible en las tres columnas, ya que
-  aplica a todo ticket de Nivel 2 (sección 6).
+- **El badge de prioridad (Critical/High/Medium/Low) NO se muestra visualmente en la
+  tarjeta** — se eliminó la categorización visible por decisión del equipo. El dato de
+  prioridad sigue existiendo y siendo relevante para el orden (vía el campo Rank de Jira,
+  sección 6 y 9), solo se removió del diseño de la tarjeta.
 - El colapso de colas largas (sección 5, "Ver N más") aplica dentro de cada columna por
   separado si supera 3 tickets — no se comparte el límite entre columnas.
 - El buscador global y el panel de detalle desplegable (botón "Ver detalle") aplican igual
@@ -166,15 +194,23 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
 
 - **Encabezado (metadatos):** en texto gris pequeño, sobre el título: número de ticket + hora
   de creación + hora en que fue tomado por el agente. Formato: `ST-1042 · 09:15 · tomado 09:18`.
-- **Título de la tarjeta:** el asunto/descripción breve del caso (ej. "Error al cargar
-  documentos de importación"), en negrita — **no** el número de ticket.
+- **Título de la tarjeta (asunto):** el asunto/descripción breve del caso (ej. "Error al
+  cargar documentos de importación"), en negrita, **tamaño de fuente moderado (más pequeño
+  que el título actual, sin dejar de destacarse del resto de la tarjeta)** — **no** el
+  número de ticket y **no** el email/nombre del solicitante. Viene del campo estándar
+  **`summary`** de Jira (el campo nativo de "resumen"/asunto del issue, no un custom field).
+  **Formato de texto (capitalización uniforme):** Jira suele traer este campo en MAYÚSCULAS
+  o con capitalización inconsistente — la app debe normalizarlo a "tipo oración" (solo la
+  primera letra en mayúscula, el resto en minúsculas), sin importar cómo venga escrito en
+  Jira. Ej. "TERDIS CON MONTO INCORRECTO" → "Terdis con monto incorrecto".
 - **Solicitante:** nombre del solicitante y empresa si aplica (ej. "Laura Gómez -
-  Importex S.A."), debajo del título. El dato de empresa viene del campo **"Company"**
-  de Jira (`customfield_10076`) — confirmado, no usar ninguno de los otros campos
-  candidatos (Organizations, Nombre del cliente, Nit Empresa, etc.).
+  Importex S.A."), debajo del título, con **tamaño de fuente más pequeño** que el título —
+  nunca como reemplazo del título. El dato de empresa viene del campo **"Company"** de Jira
+  (`customfield_10076`) — confirmado, no usar ninguno de los otros campos candidatos
+  (Organizations, Nombre del cliente, Nit Empresa, etc.).
 - **Barra de progreso:** visible directamente en la tarjeta de la lista (no solo en el
   detalle), con el porcentaje según la tabla de estados de la sección 3, alineado a la
-  derecha de la barra.
+  derecha de la barra. **Debe aparecer una sola vez por tarjeta/panel — nunca duplicada.**
 - **Chip de estado:** versión discreta — pequeño, con punto/ícono indicador, no un chip
   grande de color de fondo.
 - **Responsable:** avatar + nombre, alineado a la izquierda en la parte inferior de la
@@ -186,6 +222,17 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
   derecha del encabezado — no solo un contador total para toda la pestaña.
 - **Buscador visible:** cada pestaña de lista muestra la barra de búsqueda y el contador
   "Todos los casos [N]" arriba de los grupos, igual que en el Tablero general.
+- **Diferenciación visual entre tarjetas — colores (CONFIRMADO, invierte una versión
+  anterior):** el fondo general de la página/columnas debe ser **blanco** (`#FFFFFF`), y
+  cada **tarjeta individual** debe tener fondo **gris claro** (reutilizar el token `Fondo`
+  `#F8F9FC` de la sección 7, ahora aplicado a la tarjeta, no al fondo general de la app) más
+  un borde visible (no solo una línea casi imperceptible). Esto es lo opuesto de una versión
+  previa donde el fondo general era gris y la tarjeta blanca — quedó así porque hacía que
+  las tarjetas no se distinguieran lo suficiente del fondo de su columna.
+- **Manejo de texto largo:** ningún campo de texto (asunto, nombre de solicitante, empresa,
+  nombre de responsable) debe desbordar el ancho de la tarjeta ni romper el layout. Usar
+  salto de línea (wrap) cuando el texto quepa en 2 líneas, o truncar con "…" (ellipsis) si
+  aun así no cabe — nunca dejar que el texto se salga del contorno de la tarjeta.
 
 **Modal de detalle** (click en tarjeta del Tablero general)
 - Barra de progreso **con el porcentaje numérico visible** (ej. "60%"), tarjetas de tiempo
@@ -260,27 +307,31 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
 | Verde | `#22c55e` | Borde tickets en validación, paso completado en historial |
 | Naranja | `#C2410C` | Estado "Pendiente cliente", tiempo sin respuesta (0-16h) |
 | Rojo alerta | `#DC2626` | Tiempo sin respuesta en zona crítica (16-24h), ver sección 5 |
-| Fondo | `#F8F9FC` | Fondo general de la aplicación |
+| Fondo tarjeta | `#F8F9FC` | Fondo de cada tarjeta de ticket |
+| Fondo general | `#FFFFFF` | Fondo general de la app (página, columnas) |
 
 - **Sidebar:** fondo `#2D3172`; ícono/texto en blanco inactivo; ítem activo con fondo blanco
   y texto/ícono navy `#1A1D4E`.
 - **Pestañas:** inactiva = texto gris plano sin fondo/borde; activa = fondo lavanda `#E8EAF5`,
   borde inferior navy `#1A1D4E` de 2.5px, esquinas superiores redondeadas (6px).
 
-### Layout general — encabezado de marca y sidebar (pendiente de construir)
-
-> Estos elementos están definidos en color/estilo desde el prototipo original, pero aún no
-> se han construido como componentes — hoy la app solo muestra el contenido de las pestañas
-> sin este marco alrededor.
+### Layout general — encabezado de marca, sidebar y título de página
 
 - **Encabezado superior izquierdo:** logo "finkargo®" (texto o logo de marca), visible en
   todas las pantallas de la app, no solo en una pestaña.
-- **Sidebar de navegación lateral:** columna fija a la izquierda, fondo `#2D3172`, con al
-  menos un ítem "Triage de Soporte" (el módulo actual) con su ícono, siguiendo el estilo de
-  la tabla de colores de esta sección. Pensado como espacio para futuros módulos/apps
-  adicionales de Finkargo en la misma barra, aunque hoy solo tenga este ítem.
-- Este encabezado + sidebar envuelve a las 4 pestañas existentes (Tablero general, Nivel 1,
-  Nivel 2, Pendiente cliente) — no las reemplaza ni cambia su navegación interna.
+- **Sidebar de navegación lateral:** columna fija a la izquierda, fondo `#2D3172`, **ancho
+  compacto** (solo lo necesario para el ítem "Triage de Soporte" con ícono — no debe ocupar
+  un espacio ancho que le quite protagonismo al contenido del tablero). Pensado como espacio
+  para futuros módulos/apps adicionales de Finkargo en la misma barra.
+- **Título de página "Triage de Soporte":** encabezado (h1) visible en el área de contenido,
+  **por encima de las 4 pestañas** (Tablero general, Nivel 1, Nivel 2, Pendiente cliente) —
+  no confundir con el ítem del sidebar, que es de navegación; este es el título de la
+  pantalla actual.
+- **Pestañas a todo el ancho:** las 4 pestañas deben distribuirse ocupando todo el ancho
+  disponible del área de contenido (no agrupadas a la izquierda con espacio vacío a la
+  derecha).
+- Este encabezado + sidebar envuelve a las 4 pestañas existentes — no las reemplaza ni
+  cambia su navegación interna.
 
 ## 8. Fuera del alcance – Módulo 1
 

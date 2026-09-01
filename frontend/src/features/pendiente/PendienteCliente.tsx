@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import SearchBar from '../../components/SearchBar'
+import SearchStatusMessage from '../../components/SearchStatusMessage'
 import TicketListCard from '../../components/TicketListCard'
 import { useCollapsibleList } from '../../hooks/useCollapsibleList'
 import { useSearch } from '../../hooks/useSearch'
+import { useTicketSearchMessage } from '../../hooks/useTicketSearchMessage'
 import type { Ticket } from '../../types/ticket'
 
 function getPendienteKey(ticket: Ticket): number {
@@ -22,6 +24,7 @@ function PendienteCliente({ tickets }: PendienteClienteProps) {
     .sort((a, b) => getPendienteKey(a) - getPendienteKey(b))
 
   const { query, setQuery, matchedIds, resultCount } = useSearch(pendienteTickets)
+  const { message: searchMessage } = useTicketSearchMessage(query, resultCount, tickets)
   const [expandedTicketId, setExpandedTicketId] = useState<string | null>(null)
 
   const visibleTickets = matchedIds
@@ -32,18 +35,22 @@ function PendienteCliente({ tickets }: PendienteClienteProps) {
     useCollapsibleList(visibleTickets, matchedIds)
 
   return (
-    <div className="bg-fondo p-6">
+    <div className="bg-white p-6">
       <div className="mx-auto max-w-2xl">
-        <div className="mb-4 flex items-center gap-2">
-          <h1 className="text-sm font-semibold text-navy">Todos los casos</h1>
-          <span className="rounded-full bg-lavanda px-2 py-0.5 text-xs font-medium text-navy">
-            {pendienteTickets.length}
-          </span>
+        <div className="mb-4">
+          <SearchBar
+            totalCount={pendienteTickets.length}
+            query={query}
+            onQueryChange={setQuery}
+            resultCount={resultCount}
+          />
         </div>
 
-        <div className="mb-4">
-          <SearchBar query={query} onQueryChange={setQuery} resultCount={resultCount} />
-        </div>
+        {resultCount === 0 && (
+          <div className="mb-4">
+            <SearchStatusMessage message={searchMessage} />
+          </div>
+        )}
 
         <div className="flex flex-col gap-3">
           {ticketsAMostrar.map((ticket) => (

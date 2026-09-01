@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import SearchBar from '../../components/SearchBar'
+import SearchStatusMessage from '../../components/SearchStatusMessage'
 import TicketListColumn from '../../components/TicketListColumn'
 import { useSearch } from '../../hooks/useSearch'
+import { useTicketSearchMessage } from '../../hooks/useTicketSearchMessage'
 import type { Ticket, TicketStatus } from '../../types/ticket'
 
 const NIVEL2_ESTADOS: TicketStatus[] = ['Escalado a N2', 'Pendiente Tech', 'En curso N2']
@@ -26,6 +28,7 @@ interface NivelDosEspecialistasProps {
 function NivelDosEspecialistas({ tickets }: NivelDosEspecialistasProps) {
   const nivel2Tickets = tickets.filter((ticket) => NIVEL2_ESTADOS.includes(ticket.estado))
   const { query, setQuery, matchedIds, resultCount } = useSearch(nivel2Tickets)
+  const { message: searchMessage } = useTicketSearchMessage(query, resultCount, tickets)
   const [expandedTicketId, setExpandedTicketId] = useState<string | null>(null)
 
   const visibleTickets = matchedIds
@@ -48,17 +51,21 @@ function NivelDosEspecialistas({ tickets }: NivelDosEspecialistasProps) {
     setExpandedTicketId((current) => (current === ticketId ? null : ticketId))
 
   return (
-    <div className="bg-fondo p-6">
-      <div className="mb-4 flex items-center gap-2">
-        <h1 className="text-sm font-semibold text-navy">Todos los casos</h1>
-        <span className="rounded-full bg-lavanda px-2 py-0.5 text-xs font-medium text-navy">
-          {nivel2Tickets.length}
-        </span>
+    <div className="bg-white p-6">
+      <div className="mb-4">
+        <SearchBar
+          totalCount={nivel2Tickets.length}
+          query={query}
+          onQueryChange={setQuery}
+          resultCount={resultCount}
+        />
       </div>
 
-      <div className="mb-4">
-        <SearchBar query={query} onQueryChange={setQuery} resultCount={resultCount} />
-      </div>
+      {resultCount === 0 && (
+        <div className="mb-4">
+          <SearchStatusMessage message={searchMessage} />
+        </div>
+      )}
 
       <div className="flex gap-4 overflow-x-auto pb-2">
         <TicketListColumn
