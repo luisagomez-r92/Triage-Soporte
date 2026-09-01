@@ -78,26 +78,32 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
 - Muestra conteo de resultados en tiempo real (este es un conteo aparte del "Todos los casos
   [N]" de arriba — aparece solo mientras se está escribiendo algo en el buscador).
 
-**Mensajes de búsqueda según estado del ticket (pestañas de detalle: N1, N2, Pendiente)**
+**Mensajes de búsqueda según estado del ticket (todas las pestañas, incluido Tablero general)**
 
-> Cuando se busca un número de ticket específico y no aparece en la pestaña activa, la app
-> no debe limitarse a un genérico "0 resultados" — debe distinguir tres situaciones reales:
+> Cuando se busca un número de ticket específico y no aparece, la app no debe limitarse a
+> un genérico "0 resultados" — debe distinguir tres situaciones reales:
 
-1. **El ticket existe y está activo, pero en OTRA pestaña:** la app ya tiene ese ticket
-   cargado (viene en el mismo set de datos activos del polling, sección 9), solo no
-   pertenece a la pestaña donde se está buscando. Mostrar un mensaje amigable, acorde al
-   tono de la plataforma, que indique en qué pestaña sí está — ej. *"Este caso está abierto,
-   pero en Nivel 2 – Especialistas"* — sin cambiar automáticamente de pestaña (a diferencia
-   de una versión anterior de esta regla), solo informar.
+1. **El ticket existe y está activo, pero en OTRA pestaña:** aplica a las pestañas de
+   detalle (N1, N2, Pendiente) — la app ya tiene ese ticket cargado (viene en el mismo set
+   de datos activos del polling, sección 9), solo no pertenece a la pestaña donde se está
+   buscando. Mostrar un mensaje amigable, acorde al tono de la plataforma, que indique en
+   qué pestaña sí está — ej. *"Este caso está abierto, pero en Nivel 2 – Especialistas"* —
+   sin cambiar automáticamente de pestaña, solo informar. **No aplica al Tablero general**,
+   ya que ahí todas las columnas (N0 a Pendiente) están visibles simultáneamente — si el
+   ticket está activo, ya se resalta en su columna correspondiente sin necesidad de este
+   mensaje.
 2. **El ticket existe pero ya está cerrado** (status category "Done" — fuera del filtro
    JQL de tickets activos, ver sección 9): mostrar un mensaje distinto indicando que el
    caso ya no aparece en el tablero porque fue cerrado — ej. *"Este caso ya fue cerrado y
-   no aparece en el tablero"*. Esto requiere una consulta aparte a Jira (por fuera del set
-   de datos activos ya cargado) para confirmar que el ticket existe y su estado real —
-   confirmar con Claude Code si es viable antes de implementar, similar a como se investigó
-   el campo Rank o el mapeo de estados.
+   no aparece en el tablero"*. **Aplica también al Tablero general** — si se busca un
+   ticket cerrado ahí, debe mostrar el mismo tipo de mensaje en vez de simplemente no
+   resaltar nada. Esto requiere una consulta aparte a Jira (por fuera del set de datos
+   activos ya cargado) para confirmar que el ticket existe y su estado real — confirmar con
+   Claude Code si es viable antes de implementar, similar a como se investigó el campo Rank
+   o el mapeo de estados.
 3. **El ticket no existe en absoluto** (ni activo ni cerrado, o el número no es válido):
-   mantener el mensaje genérico actual de "Sin resultados"/"0 resultados".
+   mantener el mensaje genérico actual de "Sin resultados"/"0 resultados" — aplica a todas
+   las pestañas por igual, incluido el Tablero general.
 
 **Vista de tres columnas en Nivel 2 – Especialistas**
 

@@ -2,8 +2,10 @@ import { useState } from 'react'
 import BoardColumn from '../../components/board/BoardColumn'
 import SearchBar from '../../components/SearchBar'
 import SearchResultsList from '../../components/board/SearchResultsList'
+import SearchStatusMessage from '../../components/SearchStatusMessage'
 import TicketDetailModal from '../../components/board/TicketDetailModal'
 import { useSearch } from '../../hooks/useSearch'
+import { useTicketSearchMessage } from '../../hooks/useTicketSearchMessage'
 import type { Ticket, TicketStatus } from '../../types/ticket'
 
 const COLUMNS: { title: string; estados: TicketStatus[] }[] = [
@@ -33,6 +35,10 @@ interface TableroGeneralProps {
 
 function TableroGeneral({ tickets }: TableroGeneralProps) {
   const { query, setQuery, matchedIds, resultCount } = useSearch(tickets)
+  // Caso 1 ("activo en otra pestaña") nunca se dispara aquí: la búsqueda del Tablero ya
+  // corre sobre el set completo de tickets (no un subconjunto por pestaña), así que si el
+  // ticket está activo ya cuenta como coincidencia local — REQUIREMENTS.md §5.
+  const { message: searchMessage } = useTicketSearchMessage(query, resultCount, tickets)
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
 
   const searchResults = matchedIds
@@ -56,7 +62,11 @@ function TableroGeneral({ tickets }: TableroGeneralProps) {
       </div>
       {matchedIds && (
         <div className="mb-4">
-          <SearchResultsList results={searchResults} />
+          {resultCount === 0 ? (
+            <SearchStatusMessage message={searchMessage} />
+          ) : (
+            <SearchResultsList results={searchResults} />
+          )}
         </div>
       )}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
