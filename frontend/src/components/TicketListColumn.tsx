@@ -8,6 +8,10 @@ interface TicketListColumnProps {
   matchedIds: Set<string> | null
   expandedTicketId: string | null
   onToggleTicketDetail: (ticketId: string) => void
+  // Badge de posición por persona (REQUIREMENTS.md §5, "Vista de tres columnas en Nivel
+  // 2 – Especialistas") — opcional porque solo aplica a "Escalados"/"En curso" de esa
+  // pestaña, no a las demás pestañas que también usan esta columna.
+  getPositionBadge?: (ticket: Ticket) => number | undefined
 }
 
 function TicketListColumn({
@@ -16,6 +20,7 @@ function TicketListColumn({
   matchedIds,
   expandedTicketId,
   onToggleTicketDetail,
+  getPositionBadge,
 }: TicketListColumnProps) {
   const { visibleTickets, canCollapse, hasHiddenMatch, hiddenCount, isExpanded, toggle } =
     useCollapsibleList(tickets, matchedIds)
@@ -35,6 +40,7 @@ function TicketListColumn({
             ticket={ticket}
             expanded={expandedTicketId === ticket.id}
             onToggle={() => onToggleTicketDetail(ticket.id)}
+            positionBadge={getPositionBadge?.(ticket)}
           />
         ))}
         {canCollapse && !hasHiddenMatch && (

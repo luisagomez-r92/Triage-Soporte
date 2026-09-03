@@ -1,10 +1,13 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import BoardColumn from '../../components/board/BoardColumn'
 import SearchBar from '../../components/SearchBar'
+import SearchResultNavigator from '../../components/SearchResultNavigator'
 import SearchResultsList from '../../components/board/SearchResultsList'
 import SearchStatusMessage from '../../components/SearchStatusMessage'
 import TicketDetailModal from '../../components/board/TicketDetailModal'
+import { useN2PositionBadges } from '../../hooks/useN2PositionBadges'
 import { useSearch } from '../../hooks/useSearch'
+import { useSearchResultNavigation } from '../../hooks/useSearchResultNavigation'
 import { useTicketSearchMessage } from '../../hooks/useTicketSearchMessage'
 import type { Ticket, TicketStatus } from '../../types/ticket'
 
@@ -39,6 +42,10 @@ function TableroGeneral({ tickets }: TableroGeneralProps) {
   // corre sobre el set completo de tickets (no un subconjunto por pestaña), así que si el
   // ticket está activo ya cuenta como coincidencia local — REQUIREMENTS.md §5.
   const { message: searchMessage } = useTicketSearchMessage(query, resultCount, tickets)
+  // Badge de posición por persona (REQUIREMENTS.md §4/§5) — mismo hook que usa la
+  // pestaña Nivel 2 – Especialistas, así ambas muestran el mismo número.
+  const posicionPorTicket = useN2PositionBadges(tickets)
+  const getPositionBadge = (ticket: Ticket) => posicionPorTicket.get(ticket.id)
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
 
   const searchResults = matchedIds
@@ -49,6 +56,23 @@ function TableroGeneral({ tickets }: TableroGeneralProps) {
           columnTitle: getColumnTitle(ticket.estado),
         }))
     : []
+
+  // Orden visual real: columna por columna (N0→N1→N2→Pendiente), en el mismo orden en
+  // que cada columna ya renderiza sus tarjetas — REQUIREMENTS.md §5 "Navegación entre
+  // resultados de búsqueda".
+  const orderedMatchedIds = useMemo(() => {
+    if (!matchedIds) return []
+    return COLUMNS.flatMap(({ estados }) =>
+      getTicketsForColumn(tickets, estados).filter((ticket) => matchedIds.has(ticket.id)),
+    ).map((ticket) => ticket.id)
+  }, [matchedIds, tickets])
+
+  const {
+    activeIndex: resultIndex,
+    total: resultTotal,
+    goToNext: goToNextResult,
+    goToPrev: goToPrevResult,
+  } = useSearchResultNavigation(orderedMatchedIds)
 
   return (
     <div className="bg-white p-6">
@@ -77,6 +101,7 @@ function TableroGeneral({ tickets }: TableroGeneralProps) {
             tickets={getTicketsForColumn(tickets, estados)}
             matchedIds={matchedIds}
             onTicketClick={setSelectedTicket}
+            getPositionBadge={getPositionBadge}
           />
         ))}
       </div>
@@ -84,6 +109,14 @@ function TableroGeneral({ tickets }: TableroGeneralProps) {
         <TicketDetailModal
           ticket={selectedTicket}
           onClose={() => setSelectedTicket(null)}
+        />
+      )}
+      {resultTotal > 1 && (
+        <SearchResultNavigator
+          activeIndex={resultIndex}
+          total={resultTotal}
+          onPrev={goToPrevResult}
+          onNext={goToNextResult}
         />
       )}
     </div>

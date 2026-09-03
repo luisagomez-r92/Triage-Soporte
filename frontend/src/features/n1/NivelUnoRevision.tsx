@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react'
 import SearchBar from '../../components/SearchBar'
+import SearchResultNavigator from '../../components/SearchResultNavigator'
 import SearchStatusMessage from '../../components/SearchStatusMessage'
 import TicketListColumn from '../../components/TicketListColumn'
 import { useSearch } from '../../hooks/useSearch'
+import { useSearchResultNavigation } from '../../hooks/useSearchResultNavigation'
 import { useTicketSearchMessage } from '../../hooks/useTicketSearchMessage'
 import type { Ticket, TicketStatus } from '../../types/ticket'
 
@@ -55,6 +57,20 @@ function NivelUnoRevision({ tickets }: NivelUnoRevisionProps) {
       .sort((a, b) => a.agente.localeCompare(b.agente))
   }, [visibleTickets])
 
+  // Cuando hay búsqueda activa, `columnas` ya son solo coincidencias (visibleTickets las
+  // filtró) — el mismo orden columna-por-columna que se renderiza abajo.
+  const orderedMatchedIds = useMemo(() => {
+    if (!matchedIds) return []
+    return columnas.flatMap(({ tickets }) => tickets.map((ticket) => ticket.id))
+  }, [matchedIds, columnas])
+
+  const {
+    activeIndex: resultIndex,
+    total: resultTotal,
+    goToNext: goToNextResult,
+    goToPrev: goToPrevResult,
+  } = useSearchResultNavigation(orderedMatchedIds)
+
   return (
     <div className="bg-white p-6">
       <div className="mb-4">
@@ -86,6 +102,14 @@ function NivelUnoRevision({ tickets }: NivelUnoRevisionProps) {
           />
         ))}
       </div>
+      {resultTotal > 1 && (
+        <SearchResultNavigator
+          activeIndex={resultIndex}
+          total={resultTotal}
+          onPrev={goToPrevResult}
+          onNext={goToNextResult}
+        />
+      )}
     </div>
   )
 }

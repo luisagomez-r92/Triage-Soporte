@@ -9,9 +9,18 @@ interface BoardColumnProps {
   tickets: Ticket[]
   matchedIds: Set<string> | null
   onTicketClick: (ticket: Ticket) => void
+  // Badge de posición por persona (REQUIREMENTS.md §4/§5) — opcional porque solo aplica
+  // a tickets de Nivel 2; para el resto, el lookup simplemente no encuentra nada.
+  getPositionBadge?: (ticket: Ticket) => number | undefined
 }
 
-function BoardColumn({ title, tickets, matchedIds, onTicketClick }: BoardColumnProps) {
+function BoardColumn({
+  title,
+  tickets,
+  matchedIds,
+  onTicketClick,
+  getPositionBadge,
+}: BoardColumnProps) {
   const [expanded, setExpanded] = useState(false)
 
   const hiddenCount = tickets.length - VISIBLE_COUNT
@@ -41,6 +50,7 @@ function BoardColumn({ title, tickets, matchedIds, onTicketClick }: BoardColumnP
               matchedIds ? (matchedIds.has(ticket.id) ? 'match' : 'dimmed') : undefined
             }
             detailTrigger={{ mode: 'modal', onOpenDetail: onTicketClick }}
+            positionBadge={getPositionBadge?.(ticket)}
           />
         ))}
         {canCollapse && !hasHiddenMatch && (

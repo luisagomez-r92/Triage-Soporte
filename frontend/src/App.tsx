@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import Header from './components/Header'
 import LastUpdatedIndicator from './components/LastUpdatedIndicator'
-import Sidebar from './components/Sidebar'
+import Sidebar, { type SidebarSection } from './components/Sidebar'
 import Tabs from './components/Tabs'
 import TableroGeneral from './features/tablero/TableroGeneral'
 import NivelUnoRevision from './features/n1/NivelUnoRevision'
 import NivelDosEspecialistas from './features/n2/NivelDosEspecialistas'
 import PendienteCliente from './features/pendiente/PendienteCliente'
+import TriageDeSoporte from './features/triage/TriageDeSoporte'
 import { useTickets } from './hooks/useTickets'
 
 type TabId = 'tablero' | 'n1' | 'n2' | 'pendiente'
@@ -19,6 +20,7 @@ const TABS: { id: TabId; label: string }[] = [
 ]
 
 function App() {
+  const [activeSection, setActiveSection] = useState<SidebarSection>('triage')
   const [activeTab, setActiveTab] = useState<TabId>('tablero')
   const { tickets, loading, error, isRefreshing, refreshError, lastUpdatedAt, refetch } =
     useTickets()
@@ -27,50 +29,66 @@ function App() {
     <div className="flex min-h-screen flex-col bg-white">
       <Header />
       <div className="flex flex-1">
-        <Sidebar />
+        <Sidebar activeSection={activeSection} onChange={setActiveSection} />
         <div className="min-w-0 flex-1">
-          <h1 className="px-4 pt-4 pb-2 text-xl font-semibold text-navy">Triage de Soporte</h1>
-          <Tabs
-            tabs={TABS}
-            activeTabId={activeTab}
-            onChange={(id) => setActiveTab(id as TabId)}
-          />
+          {activeSection === 'tablero' && (
+            <>
+              <h1 className="px-4 pt-4 pb-2 text-xl font-semibold text-navy">Tablero</h1>
+              <Tabs
+                tabs={TABS}
+                activeTabId={activeTab}
+                onChange={(id) => setActiveTab(id as TabId)}
+              />
 
-          <div className="flex justify-end px-4 py-1">
-            <LastUpdatedIndicator
-              lastUpdatedAt={lastUpdatedAt}
+              <div className="flex justify-end px-4 py-1">
+                <LastUpdatedIndicator
+                  lastUpdatedAt={lastUpdatedAt}
+                  isRefreshing={isRefreshing}
+                  refreshError={refreshError}
+                />
+              </div>
+
+              {loading && (
+                <div className="p-6 text-sm text-gray-500">Cargando tickets desde Jira…</div>
+              )}
+
+              {!loading && error && (
+                <div className="p-6">
+                  <div className="rounded-lg border border-naranja/30 bg-naranja/10 px-4 py-3 text-sm text-naranja">
+                    <p className="font-medium">No se pudieron cargar los tickets desde Jira.</p>
+                    <p className="mt-1 text-xs">{error}</p>
+                    <button
+                      type="button"
+                      onClick={refetch}
+                      className="mt-3 rounded-full border border-naranja px-3 py-1 text-xs font-medium hover:bg-naranja/10"
+                    >
+                      Reintentar
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {!loading && !error && (
+                <>
+                  {activeTab === 'tablero' && <TableroGeneral tickets={tickets} />}
+                  {activeTab === 'n1' && <NivelUnoRevision tickets={tickets} />}
+                  {activeTab === 'n2' && <NivelDosEspecialistas tickets={tickets} />}
+                  {activeTab === 'pendiente' && <PendienteCliente tickets={tickets} />}
+                </>
+              )}
+            </>
+          )}
+
+          {activeSection === 'triage' && (
+            <TriageDeSoporte
+              tickets={tickets}
+              loading={loading}
+              error={error}
               isRefreshing={isRefreshing}
               refreshError={refreshError}
+              lastUpdatedAt={lastUpdatedAt}
+              refetch={refetch}
             />
-          </div>
-
-          {loading && (
-            <div className="p-6 text-sm text-gray-500">Cargando tickets desde Jira…</div>
-          )}
-
-          {!loading && error && (
-            <div className="p-6">
-              <div className="rounded-lg border border-naranja/30 bg-naranja/10 px-4 py-3 text-sm text-naranja">
-                <p className="font-medium">No se pudieron cargar los tickets desde Jira.</p>
-                <p className="mt-1 text-xs">{error}</p>
-                <button
-                  type="button"
-                  onClick={refetch}
-                  className="mt-3 rounded-full border border-naranja px-3 py-1 text-xs font-medium hover:bg-naranja/10"
-                >
-                  Reintentar
-                </button>
-              </div>
-            </div>
-          )}
-
-          {!loading && !error && (
-            <>
-              {activeTab === 'tablero' && <TableroGeneral tickets={tickets} />}
-              {activeTab === 'n1' && <NivelUnoRevision tickets={tickets} />}
-              {activeTab === 'n2' && <NivelDosEspecialistas tickets={tickets} />}
-              {activeTab === 'pendiente' && <PendienteCliente tickets={tickets} />}
-            </>
           )}
         </div>
       </div>

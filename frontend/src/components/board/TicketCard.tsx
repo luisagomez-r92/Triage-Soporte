@@ -18,9 +18,12 @@ interface TicketCardProps {
   ticket: Ticket
   matchState?: 'match' | 'dimmed'
   detailTrigger: DetailTrigger
+  // Posición del ticket dentro de la cola de su responsable (REQUIREMENTS.md §4/§5) —
+  // solo llega poblado para tickets "Escalado a N2"/"En curso N2".
+  positionBadge?: number
 }
 
-function TicketCard({ ticket, matchState, detailTrigger }: TicketCardProps) {
+function TicketCard({ ticket, matchState, detailTrigger, positionBadge }: TicketCardProps) {
   const leftBorder = getLeftBorderClass(ticket.estado)
   // Regla de negocio (REQUIREMENTS.md §6): "En espera" no tiene historial ni puede
   // abrir ningún detalle (ni modal ni panel).
@@ -45,6 +48,7 @@ function TicketCard({ ticket, matchState, detailTrigger }: TicketCardProps) {
 
   return (
     <div
+      data-ticket-id={ticket.id}
       role={isCardClickable ? 'button' : undefined}
       tabIndex={isCardClickable ? 0 : undefined}
       onClick={isCardClickable ? () => detailTrigger.onOpenDetail(ticket) : undefined}
@@ -71,10 +75,17 @@ function TicketCard({ ticket, matchState, detailTrigger }: TicketCardProps) {
       <div className="mt-3 flex items-center justify-between gap-2">
         {ticket.responsable ? (
           <div className="flex min-w-0 items-center gap-1.5">
-            <Avatar
-              nombre={ticket.responsable.nombre}
-              avatarUrl={ticket.responsable.avatarUrl}
-            />
+            <div className="relative flex-shrink-0">
+              <Avatar
+                nombre={ticket.responsable.nombre}
+                avatarUrl={ticket.responsable.avatarUrl}
+              />
+              {positionBadge !== undefined && (
+                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-white ring-2 ring-fondo">
+                  {positionBadge}
+                </span>
+              )}
+            </div>
             <span className="truncate text-xs text-gray-500">
               {ticket.responsable.nombre}
             </span>

@@ -13,9 +13,12 @@ interface TicketListCardProps {
   ticket: Ticket
   expanded: boolean
   onToggle: () => void
+  // Posición del ticket dentro de la cola de su responsable (REQUIREMENTS.md §5) — solo
+  // llega poblado desde las columnas "Escalados"/"En curso" de Nivel 2 – Especialistas.
+  positionBadge?: number
 }
 
-function TicketListCard({ ticket, expanded, onToggle }: TicketListCardProps) {
+function TicketListCard({ ticket, expanded, onToggle, positionBadge }: TicketListCardProps) {
   // Regla de negocio (REQUIREMENTS.md §6): "En espera" no tiene historial ni botón
   // "Ver detalle" — tampoco tiene hora de "tomado" porque no está asignado.
   const puedeVerDetalle = ticket.estado !== 'En espera'
@@ -31,6 +34,7 @@ function TicketListCard({ ticket, expanded, onToggle }: TicketListCardProps) {
 
   return (
     <div
+      data-ticket-id={ticket.id}
       className={`rounded-lg border border-l-4 border-gray-300 bg-fondo p-4 shadow-sm ${getLeftBorderClass(
         ticket.estado,
       )}`}
@@ -62,10 +66,17 @@ function TicketListCard({ ticket, expanded, onToggle }: TicketListCardProps) {
       <div className="mt-3 flex items-center justify-between gap-2">
         {ticket.responsable ? (
           <div className="flex min-w-0 items-center gap-1.5">
-            <Avatar
-              nombre={ticket.responsable.nombre}
-              avatarUrl={ticket.responsable.avatarUrl}
-            />
+            <div className="relative flex-shrink-0">
+              <Avatar
+                nombre={ticket.responsable.nombre}
+                avatarUrl={ticket.responsable.avatarUrl}
+              />
+              {positionBadge !== undefined && (
+                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-white ring-2 ring-fondo">
+                  {positionBadge}
+                </span>
+              )}
+            </div>
             <span className="truncate text-xs text-gray-500">{ticket.responsable.nombre}</span>
           </div>
         ) : (

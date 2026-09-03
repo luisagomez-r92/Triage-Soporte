@@ -1,25 +1,15 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import SearchBar from '../../components/SearchBar'
+import SearchResultNavigator from '../../components/SearchResultNavigator'
 import SearchStatusMessage from '../../components/SearchStatusMessage'
 import TicketListColumn from '../../components/TicketListColumn'
+import { compararPorRank, getAsignacionKey, useN2PositionBadges } from '../../hooks/useN2PositionBadges'
 import { useSearch } from '../../hooks/useSearch'
+import { useSearchResultNavigation } from '../../hooks/useSearchResultNavigation'
 import { useTicketSearchMessage } from '../../hooks/useTicketSearchMessage'
 import type { Ticket, TicketStatus } from '../../types/ticket'
 
 const NIVEL2_ESTADOS: TicketStatus[] = ['Escalado a N2', 'Pendiente Tech', 'En curso N2']
-
-function getAsignacionKey(ticket: Ticket): number {
-  // "Hora en que el desarrollador tomó el ticket" = última entrada de historial.
-  const fecha = ticket.historial?.at(-1)?.fecha ?? ticket.creadoEn
-  return new Date(fecha).getTime()
-}
-
-function compararPorRank(a: Ticket, b: Ticket): number {
-  // Simula el campo Rank de Jira (LexoRank): comparación lexicográfica del token tal
-  // cual vendría del API — nunca se recalcula combinando prioridad + hora
-  // (REQUIREMENTS.md §6 y §9).
-  return (a.rank ?? '').localeCompare(b.rank ?? '')
-}
 
 interface NivelDosEspecialistasProps {
   tickets: Ticket[]
@@ -46,6 +36,26 @@ function NivelDosEspecialistas({ tickets }: NivelDosEspecialistasProps) {
   const enCurso = visibleTickets
     .filter((ticket) => ticket.estado === 'En curso N2')
     .sort((a, b) => getAsignacionKey(a) - getAsignacionKey(b))
+
+  // Badge de posición por persona (REQUIREMENTS.md §5) — hook compartido con la columna
+  // Nivel 2 del Tablero general, calculado sobre el set de N2 completo (no sobre
+  // `visibleTickets`) para que el número no cambie según lo que se esté buscando.
+  const posicionPorTicket = useN2PositionBadges(tickets)
+  const getPositionBadge = (ticket: Ticket) => posicionPorTicket.get(ticket.id)
+
+  // Orden visual: Escalados → En curso → Pendiente Tech (mismo orden de columnas de
+  // abajo); cuando hay búsqueda activa, cada array ya son solo coincidencias.
+  const orderedMatchedIds = useMemo(() => {
+    if (!matchedIds) return []
+    return [...escalados, ...enCurso, ...pendienteTech].map((ticket) => ticket.id)
+  }, [matchedIds, escalados, enCurso, pendienteTech])
+
+  const {
+    activeIndex: resultIndex,
+    total: resultTotal,
+    goToNext: goToNextResult,
+    goToPrev: goToPrevResult,
+  } = useSearchResultNavigation(orderedMatchedIds)
 
   const toggleDetalle = (ticketId: string) =>
     setExpandedTicketId((current) => (current === ticketId ? null : ticketId))
@@ -74,6 +84,7 @@ function NivelDosEspecialistas({ tickets }: NivelDosEspecialistasProps) {
           matchedIds={matchedIds}
           expandedTicketId={expandedTicketId}
           onToggleTicketDetail={toggleDetalle}
+          getPositionBadge={getPositionBadge}
         />
         <TicketListColumn
           title="En curso"
@@ -81,6 +92,7 @@ function NivelDosEspecialistas({ tickets }: NivelDosEspecialistasProps) {
           matchedIds={matchedIds}
           expandedTicketId={expandedTicketId}
           onToggleTicketDetail={toggleDetalle}
+          getPositionBadge={getPositionBadge}
         />
         <TicketListColumn
           title="Pendiente Tech"
@@ -90,6 +102,14 @@ function NivelDosEspecialistas({ tickets }: NivelDosEspecialistasProps) {
           onToggleTicketDetail={toggleDetalle}
         />
       </div>
+      {resultTotal > 1 && (
+        <SearchResultNavigator
+          activeIndex={resultIndex}
+          total={resultTotal}
+          onPrev={goToPrevResult}
+          onNext={goToNextResult}
+        />
+      )}
     </div>
   )
 }

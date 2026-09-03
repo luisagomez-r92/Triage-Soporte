@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import SearchBar from '../../components/SearchBar'
+import SearchResultNavigator from '../../components/SearchResultNavigator'
 import SearchStatusMessage from '../../components/SearchStatusMessage'
 import TicketListCard from '../../components/TicketListCard'
 import { useCollapsibleList } from '../../hooks/useCollapsibleList'
 import { useSearch } from '../../hooks/useSearch'
+import { useSearchResultNavigation } from '../../hooks/useSearchResultNavigation'
 import { useTicketSearchMessage } from '../../hooks/useTicketSearchMessage'
 import type { Ticket } from '../../types/ticket'
 
@@ -33,6 +35,20 @@ function PendienteCliente({ tickets }: PendienteClienteProps) {
 
   const { visibleTickets: ticketsAMostrar, canCollapse, hasHiddenMatch, hiddenCount, isExpanded, toggle } =
     useCollapsibleList(visibleTickets, matchedIds)
+
+  // Lista única ya ordenada; cuando hay búsqueda activa, `ticketsAMostrar` ya son solo
+  // coincidencias (auto-expandidas si estaban colapsadas).
+  const orderedMatchedIds = useMemo(() => {
+    if (!matchedIds) return []
+    return ticketsAMostrar.map((ticket) => ticket.id)
+  }, [matchedIds, ticketsAMostrar])
+
+  const {
+    activeIndex: resultIndex,
+    total: resultTotal,
+    goToNext: goToNextResult,
+    goToPrev: goToPrevResult,
+  } = useSearchResultNavigation(orderedMatchedIds)
 
   return (
     <div className="bg-white p-6">
@@ -74,6 +90,14 @@ function PendienteCliente({ tickets }: PendienteClienteProps) {
           )}
         </div>
       </div>
+      {resultTotal > 1 && (
+        <SearchResultNavigator
+          activeIndex={resultIndex}
+          total={resultTotal}
+          onPrev={goToPrevResult}
+          onNext={goToNextResult}
+        />
+      )}
     </div>
   )
 }

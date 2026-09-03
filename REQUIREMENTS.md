@@ -56,7 +56,7 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
 |---|---|
 | Nivel 0 – Nuevos | Recién creados, estado "En espera" (puede o no tener responsable ya asignado en Jira). FIFO estricto por hora de llegada. |
 | Nivel 1 – Revisión | En atención por N1. Incluye casos en validación (borde verde izq.). |
-| Nivel 2 – Especialistas | En curso (borde azul) y en cola, esta última ordenada por el campo Rank de Jira. Máx. 3 visibles, resto colapsado ("Ver más"). *(Esta es la columna única del Tablero general — no confundir con la vista de tres columnas "Escalados"/"En curso"/"Pendiente Tech" de la pestaña Nivel 2 – Especialistas, ver sección 5).* |
+| Nivel 2 – Especialistas | En curso (borde azul) y en cola, esta última ordenada por el campo Rank de Jira. Máx. 3 visibles, resto colapsado ("Ver más"). **Incluye el badge de posición por persona** (ver sección 5, "Badge de posición por persona") sobre el avatar del responsable — mismo cálculo y misma exclusión de tickets "Pendiente Tech" (que en el Tablero general no tienen columna propia, pero si un ticket corresponde a ese estado, tampoco lleva este badge). *(Esta es la columna única del Tablero general — no confundir con la vista de tres columnas "Escalados"/"En curso"/"Pendiente Tech" de la pestaña Nivel 2 – Especialistas, ver sección 5).* |
 | Pendiente cliente | Con tiempo sin respuesta visible en la tarjeta, **incluyendo el color escalonado y la alerta crítica** definidos en la sección 5 ("Alerta de tiempo crítico en Pendiente cliente") — no solo un texto plano. |
 
 ## 5. Funcionalidades principales
@@ -77,6 +77,23 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
 - Tickets colapsados se expanden automáticamente al buscar.
 - Muestra conteo de resultados en tiempo real (este es un conteo aparte del "Todos los casos
   [N]" de arriba — aparece solo mientras se está escribiendo algo en el buscador).
+
+**Navegación entre resultados de búsqueda (scroll automático + indicador flotante)**
+
+> Resuelve que un resultado resaltado quede fuera de la vista visible (ej. al final de una
+> columna larga) y el usuario no lo note. Aplica al Tablero general y a las pestañas de
+> detalle (N1, N2, Pendiente).
+
+- Al escribir una búsqueda con al menos 1 coincidencia, la vista hace **scroll automático**
+  hasta la tarjeta del primer resultado (no depende de que el usuario se dé cuenta de que
+  hay que desplazarse).
+- Si hay **más de un resultado**, aparece un indicador flotante pequeño (ej. esquina
+  inferior derecha del área de resultados) mostrando "[posición actual] de [total]" (ej.
+  "2 de 3"), con dos flechas (▲/▼) para saltar entre resultados sin perder el resaltado ni
+  tener que hacer scroll manual.
+- Con un solo resultado, el indicador **no se muestra** — el scroll automático ya es
+  suficiente.
+- El indicador desaparece al borrar la búsqueda o cuando no hay coincidencias.
 
 **Mensajes de búsqueda según estado del ticket (todas las pestañas, incluido Tablero general)**
 
@@ -128,6 +145,25 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
   tarjeta** — se eliminó la categorización visible por decisión del equipo. El dato de
   prioridad sigue existiendo y siendo relevante para el orden (vía el campo Rank de Jira,
   sección 6 y 9), solo se removió del diseño de la tarjeta.
+- **Badge de posición por persona (número junto al avatar del responsable):** el orden
+  global de la lista (por Rank de Jira) no cambia, pero cada tarjeta debe mostrar además un
+  pequeño número — superpuesto en la esquina del avatar del responsable, como una
+  notificación — indicando en qué posición está ese ticket dentro de la cola de **esa
+  persona específica**, no la posición global de la lista.
+  - **Cálculo:** para cada responsable, se cuenta primero su ticket en **"En curso"** (si
+    tiene uno ahí, ese es su posición 1), y luego se continúa la numeración con sus tickets
+    en **"Escalados"**, en el mismo orden interno de esa columna (Rank de Jira) — ej. si
+    Liceth tiene 1 ticket en curso y 2 en escalados, sus tickets muestran 1 (en curso), 2 y
+    3 (en escalados, en orden de Rank). Si no tiene ticket en curso, su primer ticket en
+    escalados ya es el 1.
+  - **"Pendiente Tech" queda fuera de este conteo** — los tickets en esa columna no llevan
+    este badge de posición (aunque sí mantienen avatar + nombre del responsable como ya
+    está definido).
+  - El conteo es independiente por persona — dos personas distintas pueden tener ambas un
+    ticket marcado "1" al mismo tiempo, cada una en su propia cola.
+  - **Alcance:** este badge aplica tanto en la pestaña "Nivel 2 – Especialistas" (columnas
+    Escalados y En curso) como en la **columna Nivel 2 del Tablero general** (sección 4) —
+    mismo cálculo en ambos lugares, ya que ambos reflejan los mismos tickets de Nivel 2.
 - El colapso de colas largas (sección 5, "Ver N más") aplica dentro de cada columna por
   separado si supera 3 tickets — no se comparte el límite entre columnas.
 - El buscador global y el panel de detalle desplegable (botón "Ver detalle") aplican igual
@@ -324,20 +360,114 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
 ### Layout general — encabezado de marca, sidebar y título de página
 
 - **Encabezado superior izquierdo:** logo "finkargo®" (texto o logo de marca), visible en
-  todas las pantallas de la app, no solo en una pestaña.
+  todas las pantallas de la app, no solo en una vista.
 - **Sidebar de navegación lateral:** columna fija a la izquierda, fondo `#2D3172`, **ancho
-  compacto** (solo lo necesario para el ítem "Triage de Soporte" con ícono — no debe ocupar
-  un espacio ancho que le quite protagonismo al contenido del tablero). Pensado como espacio
-  para futuros módulos/apps adicionales de Finkargo en la misma barra.
-- **Título de página "Triage de Soporte":** encabezado (h1) visible en el área de contenido,
-  **por encima de las 4 pestañas** (Tablero general, Nivel 1, Nivel 2, Pendiente cliente) —
-  no confundir con el ítem del sidebar, que es de navegación; este es el título de la
-  pantalla actual.
-- **Pestañas a todo el ancho:** las 4 pestañas deben distribuirse ocupando todo el ancho
-  disponible del área de contenido (no agrupadas a la izquierda con espacio vacío a la
-  derecha).
-- Este encabezado + sidebar envuelve a las 4 pestañas existentes — no las reemplaza ni
-  cambia su navegación interna.
+  compacto**. Pensado como espacio para futuros módulos/apps adicionales de Finkargo en la
+  misma barra.
+- **Dos ítems de menú en el sidebar, en este orden de arriba hacia abajo (CONFIRMADO):**
+  1. **"Triage de Soporte"** (primero) — nueva vista de **resumen ejecutivo** (dashboard),
+     ver sección dedicada más abajo ("Dashboard resumen — 'Triage de Soporte'"). Es la vista
+     que se muestra al entrar a este ítem del sidebar.
+  2. **"Tablero"** (segundo, debajo) — aquí vive TODO lo construido hasta ahora: las 4
+     pestañas (Tablero general, Nivel 1 – Revisión, Nivel 2 – Especialistas, Pendiente
+     cliente) descritas en la sección 4 y 5, sin ningún cambio de funcionalidad — solo se
+     mudan de estar "sueltas" a vivir bajo este ítem del sidebar.
+- **Título de página:** cada vista (Tablero, Triage de Soporte) muestra su propio título
+  (h1) en el área de contenido, por encima de su navegación interna (pestañas para
+  "Tablero"; sin pestañas internas para "Triage de Soporte").
+- **Pestañas a todo el ancho (dentro de "Tablero"):** las 4 pestañas deben distribuirse
+  ocupando todo el ancho disponible del área de contenido.
+
+## Dashboard resumen — "Triage de Soporte" (nueva vista)
+
+> Vista de resumen ejecutivo: qué está pasando ahora mismo en el equipo de soporte, sin
+> necesidad de navegar por las 4 pestañas del "Tablero". Es una vista de **solo lectura**,
+> no reemplaza ninguna funcionalidad del Tablero — es un complemento a alto nivel.
+
+### Estilo visual — CORRECCIÓN de alcance (el tema oscuro es solo de los 2 paneles superiores)
+
+> Corrige una versión anterior de esta sección, que decía incorrectamente que TODA la vista
+> era de tema oscuro. El fondo general de la página y las listas "Próximos" son **claros**
+> (blanco), igual que el resto de la app — el tema oscuro aplica únicamente a los 2 paneles
+> superiores ("Nivel 1 · En Gestión" y "Nivel 2 · En Curso"), tratados como dos widgets
+> oscuros flotando sobre un fondo blanco, no como un tema de página completo.
+
+- **Fondo general de la página:** blanco `#FFFFFF` (igual que el resto de la app).
+- **Los 2 paneles superiores** ("Nivel 1 · En Gestión", "Nivel 2 · En Curso") tienen fondo
+  azul marino oscuro (aprox. `#1E2150` – `#242868`), texto blanco, metadatos en gris
+  claro/azulado tenue, y badges de prioridad con sus colores distintivos (rojo/rosado
+  "Highest", ámbar "High") — esto sí se mantiene como estaba.
+- **Las listas "Próximos · Nivel 1" y "Próximos · Nivel 2"** son de **tema claro** (fondo
+  blanco, texto negro/gris) — ver diseño detallado en "Estructura de la vista" más abajo.
+
+### Estructura de la vista
+
+**Dos paneles lado a lado en la parte superior:**
+
+1. **"Nivel 1 · En Gestión"** — una fila por cada agente de N1 que tiene **actualmente un
+   ticket activo** en estado "En revisión N1" (es decir, el ticket que está trabajando en
+   este momento, no su cola completa). **Sin lista de agentes "disponibles"/inactivos** —
+   solo se muestran agentes con ticket activo ahora mismo; si nadie tiene uno, el panel
+   puede quedar vacío o mostrar un mensaje breve tipo "Nadie en gestión en este momento".
+   - **Orden de la tarjeta (CORRECCIÓN — cambia el layout anterior):** de arriba hacia
+     abajo: (1) número de ticket, (2) asunto (título) del ticket, (3) avatar + nombre del
+     agente. **Se elimina por completo la línea de metadatos de tiempo** ("Xh Ym en este
+     estado · Xh Ym desde que llegó") — ya no se muestra en esta tarjeta. El avatar +
+     nombre del agente pasa a ocupar el espacio donde antes estaba esa línea de tiempo
+     (parte inferior de la tarjeta), en vez de estar arriba del todo como antes.
+   - **Tamaño compacto (CORRECCIÓN — el desarrollo quedó con fuentes demasiado grandes):**
+     el número de ticket y el asunto deben verse notablemente más pequeños que como se
+     implementó — referencia aproximada: número de ticket ~18-20px (no ~32px como quedó),
+     asunto ~14-15px regular (no ~20px), avatar+nombre en tamaño pequeño (~12-13px). El
+     objetivo es que cada tarjeta ocupe bastante menos alto del que ocupa hoy, permitiendo
+     ver más tickets sin scroll.
+   - **Fondo de cada tarjeta ligeramente distinto al fondo del panel** (CORRECCIÓN — hoy
+     se ven del mismo color, solo separadas por una línea): cada tarjeta de ticket dentro
+     del panel debe tener un tono de azul marino sutilmente más claro que el fondo general
+     del panel, para que se distinga como una tarjeta propia, no solo una fila separada por
+     una línea divisoria.
+   - **Sin contador tipo "2/2"** junto al título del panel — se decidió no incluirlo.
+   - **Sin pie de panel con conteos** (ej. "X en pendiente cliente") — se decidió no
+     incluirlo, se eliminó de esta vista.
+2. **"Nivel 2 · En Curso"** — mismo patrón que el panel de Nivel 1 (incluido el nuevo
+   orden: ticket → asunto → avatar/nombre, sin línea de tiempo), pero para agentes de N2
+   con ticket activo en estado "En curso N2". Cada fila incluye además el **badge de
+   prioridad** (Highest/High/Medium/Low — aquí SÍ se muestra, a diferencia de las tarjetas
+   del Tablero donde se ocultó por decisión previa; esta vista de resumen es un contexto
+   distinto, también con tamaño de fuente compacto para el badge). **Supuesto a confirmar:**
+   como se eliminó la línea de tiempo donde antes vivía este badge, se ubica ahora junto a
+   la fila de avatar/nombre del agente (parte inferior de la tarjeta) — avisar si se
+   prefiere otra posición. **Mismas correcciones de tamaño compacto y fondo de tarjeta
+   diferenciado** que el panel de Nivel 1, arriba. **Sin lista de "disponibles"**, igual
+   que el panel de N1. **Sin contador tipo "2/3"**. **Sin pie de panel con conteos** (ej.
+   "X devuelto a Nivel 1") — se decidió no incluirlo, se eliminó de esta vista.
+
+**Dos listas "Próximos" debajo, lado a lado — TEMA CLARO (fondo blanco, no oscuro):**
+
+> Diseño de fila (aplica a ambas listas): número de posición dentro de un **círculo navy
+> con número blanco** (mismo estilo de badge ya usado en otras partes de la app), luego el
+> **número de ticket + asunto en negro/negrita** en la misma línea (ej. "ST-11985 · No
+> refleja el abono realizado en la operación"), y alineado a la derecha: nombre del
+> solicitante (Nivel 1) o badge de prioridad (Nivel 2), en gris/tenue según corresponda.
+> **Sin línea de tiempo (CORRECCIÓN — se elimina en ambas listas):** ya no se muestra
+> "Xh Ym desde que llegó" ni "Xh Ym en ese estado" debajo del nombre del solicitante o del
+> badge de prioridad — el dato de la derecha queda solo, sin una segunda línea debajo.
+
+3. **"Próximos · Nivel 1"** — los tickets de Nivel 0 (estado "En espera"), en el mismo
+   orden FIFO ya definido (sección 6). Numeración secuencial simple (1, 2, 3...) según ese
+   orden — no es el badge de posición por persona (eso es exclusivo de Nivel 2, sección 5).
+4. **"Próximos · Nivel 2"** — los tickets en estado "Escalado a N2" (columna "Escalados"),
+   en el mismo orden por Rank de Jira ya definido (sección 6 y 9). Numeración secuencial
+   simple (1, 2, 3...) según ese orden — igual que arriba, no es el badge de posición por
+   persona. En vez del nombre del solicitante a la derecha, muestra el **badge de
+   prioridad** (Highest/High/Medium/Low).
+
+### Actualización en tiempo real
+
+- Esta vista se actualiza con el mismo mecanismo de polling ya construido (sección 9) —
+  reutiliza los mismos datos que alimentan el "Tablero", no requiere una fuente de datos
+  aparte. El indicador "Actualizado justo ahora · HH:MM" ya existe (`LastUpdatedIndicator`)
+  y se reutiliza aquí también.
 
 ## 8. Fuera del alcance – Módulo 1
 

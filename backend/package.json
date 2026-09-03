@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "cross-env NODE_EXTRA_CA_CERTS=./certs/trusted_certs.crt tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js"
   },
@@ -18,6 +18,7 @@
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/node": "^26.4.0",
+    "cross-env": "^10.1.0",
     "tsx": "^4.23.12",
     "typescript": "^7.0.2"
   }
