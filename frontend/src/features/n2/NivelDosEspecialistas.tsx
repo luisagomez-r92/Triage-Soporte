@@ -3,20 +3,27 @@ import SearchBar from '../../components/SearchBar'
 import SearchResultNavigator from '../../components/SearchResultNavigator'
 import SearchStatusMessage from '../../components/SearchStatusMessage'
 import TicketListColumn from '../../components/TicketListColumn'
-import { compararPorRank, getAsignacionKey, useN2PositionBadges } from '../../hooks/useN2PositionBadges'
+import { useN2PositionBadges } from '../../hooks/useN2PositionBadges'
 import { useSearch } from '../../hooks/useSearch'
 import { useSearchResultNavigation } from '../../hooks/useSearchResultNavigation'
 import { useTicketSearchMessage } from '../../hooks/useTicketSearchMessage'
 import type { Ticket, TicketStatus } from '../../types/ticket'
 
-const NIVEL2_ESTADOS: TicketStatus[] = ['Escalado a N2', 'Pendiente Tech', 'En curso N2']
+// REQUIREMENTS.md §5 "Vista kanban por agente en Nivel 2 – Especialistas" — reemplaza las
+// columnas fijas "Escalados"/"En curso". Todo ticket en estos estados ya tiene especialista
+// asignado en Jira desde el escalado, así que el filtro de responsable es solo para
+// estrechar el tipo (nunca debería excluir nada en la práctica).
+const NIVEL2_ESTADOS: TicketStatus[] = ['Escalado a N2', 'En curso N2']
 
 interface NivelDosEspecialistasProps {
   tickets: Ticket[]
 }
 
 function NivelDosEspecialistas({ tickets }: NivelDosEspecialistasProps) {
-  const nivel2Tickets = tickets.filter((ticket) => NIVEL2_ESTADOS.includes(ticket.estado))
+  const nivel2Tickets = tickets.filter(
+    (ticket): ticket is Ticket & { responsable: NonNullable<Ticket['responsable']> } =>
+      NIVEL2_ESTADOS.includes(ticket.estado) && Boolean(ticket.responsable),
+  )
   const { query, setQuery, matchedIds, resultCount } = useSearch(nivel2Tickets)
   const { message: searchMessage } = useTicketSearchMessage(query, resultCount, tickets)
   const [expandedTicketId, setExpandedTicketId] = useState<string | null>(null)
@@ -25,30 +32,38 @@ function NivelDosEspecialistas({ tickets }: NivelDosEspecialistasProps) {
     ? nivel2Tickets.filter((ticket) => matchedIds.has(ticket.id))
     : nivel2Tickets
 
-  const escalados = visibleTickets
-    .filter((ticket) => ticket.estado === 'Escalado a N2')
-    .sort(compararPorRank)
-
-  const pendienteTech = visibleTickets
-    .filter((ticket) => ticket.estado === 'Pendiente Tech')
-    .sort(compararPorRank)
-
-  const enCurso = visibleTickets
-    .filter((ticket) => ticket.estado === 'En curso N2')
-    .sort((a, b) => getAsignacionKey(a) - getAsignacionKey(b))
-
   // Badge de posición por persona (REQUIREMENTS.md §5) — hook compartido con la columna
   // Nivel 2 del Tablero general, calculado sobre el set de N2 completo (no sobre
-  // `visibleTickets`) para que el número no cambie según lo que se esté buscando.
+  // `visibleTickets`) para que el número no cambie según lo que se esté buscando. Se
+  // reutiliza también para ordenar cada columna, así el orden vertical y el número del
+  // badge coinciden siempre por construcción (en curso primero, luego escalados por Rank).
   const posicionPorTicket = useN2PositionBadges(tickets)
   const getPositionBadge = (ticket: Ticket) => posicionPorTicket.get(ticket.id)
 
-  // Orden visual: Escalados → En curso → Pendiente Tech (mismo orden de columnas de
-  // abajo); cuando hay búsqueda activa, cada array ya son solo coincidencias.
+  const columnas = useMemo(() => {
+    const porAgente = new Map<string, Ticket[]>()
+    for (const ticket of visibleTickets) {
+      const agente = ticket.responsable.nombre
+      const grupo = porAgente.get(agente) ?? []
+      grupo.push(ticket)
+      porAgente.set(agente, grupo)
+    }
+    return Array.from(porAgente.entries())
+      .map(([agente, tickets]) => ({
+        agente,
+        tickets: [...tickets].sort(
+          (a, b) => (posicionPorTicket.get(a.id) ?? 0) - (posicionPorTicket.get(b.id) ?? 0),
+        ),
+      }))
+      .sort((a, b) => a.agente.localeCompare(b.agente))
+  }, [visibleTickets, posicionPorTicket])
+
+  // Cuando hay búsqueda activa, `columnas` ya son solo coincidencias (visibleTickets las
+  // filtró) — el mismo orden columna-por-columna que se renderiza abajo.
   const orderedMatchedIds = useMemo(() => {
     if (!matchedIds) return []
-    return [...escalados, ...enCurso, ...pendienteTech].map((ticket) => ticket.id)
-  }, [matchedIds, escalados, enCurso, pendienteTech])
+    return columnas.flatMap(({ tickets }) => tickets.map((ticket) => ticket.id))
+  }, [matchedIds, columnas])
 
   const {
     activeIndex: resultIndex,
@@ -78,29 +93,18 @@ function NivelDosEspecialistas({ tickets }: NivelDosEspecialistasProps) {
       )}
 
       <div className="flex gap-4 overflow-x-auto pb-2">
-        <TicketListColumn
-          title="Escalados"
-          tickets={escalados}
-          matchedIds={matchedIds}
-          expandedTicketId={expandedTicketId}
-          onToggleTicketDetail={toggleDetalle}
-          getPositionBadge={getPositionBadge}
-        />
-        <TicketListColumn
-          title="En curso"
-          tickets={enCurso}
-          matchedIds={matchedIds}
-          expandedTicketId={expandedTicketId}
-          onToggleTicketDetail={toggleDetalle}
-          getPositionBadge={getPositionBadge}
-        />
-        <TicketListColumn
-          title="Pendiente Tech"
-          tickets={pendienteTech}
-          matchedIds={matchedIds}
-          expandedTicketId={expandedTicketId}
-          onToggleTicketDetail={toggleDetalle}
-        />
+        {columnas.map(({ agente, tickets }) => (
+          <TicketListColumn
+            key={agente}
+            title={agente}
+            tickets={tickets}
+            matchedIds={matchedIds}
+            expandedTicketId={expandedTicketId}
+            onToggleTicketDetail={toggleDetalle}
+            getPositionBadge={getPositionBadge}
+            statusChipVariant="solid"
+          />
+        ))}
       </div>
       {resultTotal > 1 && (
         <SearchResultNavigator

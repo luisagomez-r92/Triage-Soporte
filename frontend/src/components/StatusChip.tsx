@@ -21,15 +21,25 @@ const DOT_COLOR: Record<TicketStatus, string> = {
   'En validación': 'bg-verde',
 }
 
+const SOLID_SIZE: Record<'default' | 'compact', string> = {
+  default: 'px-2 py-0.5 text-xs',
+  // REQUIREMENTS.md — "Tarjeta de ticket — encabezado en una sola línea": el chip del
+  // Tablero general se achica para que quepa junto al círculo de progreso y el número de
+  // ticket sin bajar a una segunda línea. Exclusivo de ese contexto (board/TicketCard).
+  compact: 'px-1.5 py-0.5 text-[10px]',
+}
+
 interface StatusChipProps {
   estado: TicketStatus
-  // 'solid': chip grande de color de fondo (Tablero, Modal de detalle).
+  // 'solid': chip grande de color de fondo (Tablero, Modal de detalle, Nivel 2).
   // 'discreet': punto indicador + texto gris (tarjeta de las pestañas de lista,
   // REQUIREMENTS.md §5).
   variant?: 'solid' | 'discreet'
+  // Solo aplica al variant 'solid' — ver SOLID_SIZE arriba.
+  size?: 'default' | 'compact'
 }
 
-function StatusChip({ estado, variant = 'solid' }: StatusChipProps) {
+function StatusChip({ estado, variant = 'solid', size = 'default' }: StatusChipProps) {
   if (variant === 'discreet') {
     return (
       <span className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600">
@@ -41,7 +51,7 @@ function StatusChip({ estado, variant = 'solid' }: StatusChipProps) {
 
   return (
     <span
-      className={`whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ${SOLID_STYLES[estado]}`}
+      className={`whitespace-nowrap rounded-full font-medium ${SOLID_STYLES[estado]} ${SOLID_SIZE[size]}`}
     >
       {estado}
     </span>

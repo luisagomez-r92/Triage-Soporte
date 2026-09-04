@@ -14,11 +14,21 @@ interface TicketListCardProps {
   expanded: boolean
   onToggle: () => void
   // Posición del ticket dentro de la cola de su responsable (REQUIREMENTS.md §5) — solo
-  // llega poblado desde las columnas "Escalados"/"En curso" de Nivel 2 – Especialistas.
+  // llega poblado desde las columnas por agente de Nivel 2 – Especialistas.
   positionBadge?: number
+  // 'discreet' (default) para N1/Pendiente. Nivel 2 – Especialistas pasa 'solid' — mismo
+  // chip píldora con fondo de color que usa TicketCard del Tablero general, ya que ahí no
+  // hay columnas separadas por estado que lo indiquen de un vistazo (REQUIREMENTS.md §5).
+  statusChipVariant?: 'solid' | 'discreet'
 }
 
-function TicketListCard({ ticket, expanded, onToggle, positionBadge }: TicketListCardProps) {
+function TicketListCard({
+  ticket,
+  expanded,
+  onToggle,
+  positionBadge,
+  statusChipVariant = 'discreet',
+}: TicketListCardProps) {
   // Regla de negocio (REQUIREMENTS.md §6): "En espera" no tiene historial ni botón
   // "Ver detalle" — tampoco tiene hora de "tomado" porque no está asignado.
   const puedeVerDetalle = ticket.estado !== 'En espera'
@@ -39,7 +49,12 @@ function TicketListCard({ ticket, expanded, onToggle, positionBadge }: TicketLis
         ticket.estado,
       )}`}
     >
-      <p className="truncate text-xs text-gray-400">{metaLine}</p>
+      <div className="flex items-start justify-between gap-2">
+        <p className="min-w-0 truncate text-xs text-gray-400">{metaLine}</p>
+        {statusChipVariant === 'solid' && (
+          <StatusChip estado={ticket.estado} variant="solid" />
+        )}
+      </div>
       <p className="mt-1 line-clamp-2 break-words text-sm font-semibold text-navy">{ticket.titulo}</p>
       <p className="mt-0.5 line-clamp-2 break-words text-xs text-gray-600">
         {ticket.solicitante}
@@ -59,9 +74,11 @@ function TicketListCard({ ticket, expanded, onToggle, positionBadge }: TicketLis
         <span className="text-xs text-gray-400">{percent}%</span>
       </div>
 
-      <div className="mt-3 flex items-center gap-2">
-        <StatusChip estado={ticket.estado} variant="discreet" />
-      </div>
+      {statusChipVariant === 'discreet' && (
+        <div className="mt-3 flex items-center gap-2">
+          <StatusChip estado={ticket.estado} variant="discreet" />
+        </div>
+      )}
 
       <div className="mt-3 flex items-center justify-between gap-2">
         {ticket.responsable ? (
@@ -96,7 +113,7 @@ function TicketListCard({ ticket, expanded, onToggle, positionBadge }: TicketLis
       {puedeVerDetalle && expanded && (
         <div className="mt-3 border-t border-gray-100 pt-3">
           {ticket.estado === 'En validación' && <TicketValidationAlert />}
-          <TicketDetailPanel ticket={ticket} />
+          <TicketDetailPanel ticket={ticket} showProgress={false} />
         </div>
       )}
     </div>

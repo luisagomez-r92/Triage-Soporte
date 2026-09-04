@@ -8,10 +8,12 @@ interface TicketListColumnProps {
   matchedIds: Set<string> | null
   expandedTicketId: string | null
   onToggleTicketDetail: (ticketId: string) => void
-  // Badge de posición por persona (REQUIREMENTS.md §5, "Vista de tres columnas en Nivel
-  // 2 – Especialistas") — opcional porque solo aplica a "Escalados"/"En curso" de esa
-  // pestaña, no a las demás pestañas que también usan esta columna.
+  // Badge de posición por persona (REQUIREMENTS.md §5, "Vista kanban por agente en Nivel
+  // 2 – Especialistas") — opcional porque solo aplica a esa pestaña, no a las demás que
+  // también usan esta columna.
   getPositionBadge?: (ticket: Ticket) => number | undefined
+  // Ver TicketListCard — 'solid' solo lo pasa Nivel 2 – Especialistas.
+  statusChipVariant?: 'solid' | 'discreet'
 }
 
 function TicketListColumn({
@@ -21,6 +23,7 @@ function TicketListColumn({
   expandedTicketId,
   onToggleTicketDetail,
   getPositionBadge,
+  statusChipVariant,
 }: TicketListColumnProps) {
   const { visibleTickets, canCollapse, hasHiddenMatch, hiddenCount, isExpanded, toggle } =
     useCollapsibleList(tickets, matchedIds)
@@ -41,6 +44,7 @@ function TicketListColumn({
             expanded={expandedTicketId === ticket.id}
             onToggle={() => onToggleTicketDetail(ticket.id)}
             positionBadge={getPositionBadge?.(ticket)}
+            statusChipVariant={statusChipVariant}
           />
         ))}
         {canCollapse && !hasHiddenMatch && (

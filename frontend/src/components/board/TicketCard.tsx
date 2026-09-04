@@ -1,10 +1,12 @@
 import type { KeyboardEvent } from 'react'
 import Avatar from '../Avatar'
+import ProgressRing from '../ProgressRing'
 import StatusChip from '../StatusChip'
 import TicketDetailPanel from '../TicketDetailPanel'
 import TicketValidationAlert from '../TicketValidationAlert'
 import TicketWaitingTime from '../TicketWaitingTime'
 import { getLeftBorderClass } from '../../lib/ticketBorderColor'
+import { PROGRESS_BY_STATUS } from '../../lib/ticketProgress'
 import type { Ticket } from '../../types/ticket'
 
 // 'modal': click en toda la tarjeta abre el modal de detalle (Tablero general).
@@ -58,11 +60,14 @@ function TicketCard({ ticket, matchState, detailTrigger, positionBadge }: Ticket
       }`}
     >
       <div className="flex items-start justify-between gap-2">
-        <span className="font-mono text-sm font-semibold text-navy">
-          {ticket.id}
-        </span>
+        <div className="flex min-w-0 items-center gap-1.5">
+          <ProgressRing percent={PROGRESS_BY_STATUS[ticket.estado]} />
+          <span className="truncate font-mono text-xs font-semibold text-navy">
+            {ticket.id}
+          </span>
+        </div>
         <div className="flex flex-shrink-0 items-center gap-1.5">
-          <StatusChip estado={ticket.estado} />
+          <StatusChip estado={ticket.estado} size="compact" />
         </div>
       </div>
       <p className="mt-1 line-clamp-2 break-words text-sm font-semibold text-navy">{ticket.titulo}</p>

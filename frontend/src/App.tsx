@@ -16,7 +16,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'tablero', label: 'Tablero general' },
   { id: 'n1', label: 'Nivel 1 – Revisión' },
   { id: 'n2', label: 'Nivel 2 – Especialistas' },
-  { id: 'pendiente', label: 'Pendiente cliente' },
+  { id: 'pendiente', label: 'Pendiente' },
 ]
 
 function App() {

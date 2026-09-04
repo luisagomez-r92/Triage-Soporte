@@ -37,7 +37,7 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
 | En revisión N1 | Nivel 1 | 30% | Tomado por agente N1. En análisis inicial. |
 | Pendiente cliente | Pendiente cliente | 35% | Se requiere info del cliente. Muestra tiempo sin respuesta. |
 | Escalado a N2 | Nivel 2 | 40% | Derivado a especialista. En cola esperando ser tomado. |
-| Pendiente Tech | Nivel 2 | 45% | Variante de "Escalado a N2": el ticket quedó esperando a que un agente de Tech lo tome, en una columna propia dentro de Nivel 2 – Especialistas (distinta de "Escalados" y "En curso"). Corresponde al status real de Jira "Pendiente" (columna PENDIENTE TECH). |
+| Pendiente Tech | Pendiente | 45% | Variante de "Escalado a N2": el ticket quedó esperando a que un agente de Tech lo tome, en una columna propia dentro de la pestaña **"Pendiente"** (junto a "Pendiente cliente" — CORRECCIÓN: antes vivía en Nivel 2 – Especialistas, se mudó). Corresponde al status real de Jira "Pendiente" (columna PENDIENTE TECH). |
 | En curso N2 | Nivel 2 | 60% | Desarrollador trabajando activamente en el caso. |
 | En validación | Nivel 1 | 90% | N2 aplicó solución. N1 confirma cierre del caso. |
 
@@ -47,8 +47,8 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
 |---|---|---|
 | Tablero general | Vista kanban: N0, Nivel 1, Nivel 2, Pendiente. Incluye buscador global. | Por columna según nivel |
 | Nivel 1 – Revisión | Vista kanban con una columna por agente de N1. Cada columna lista TODOS los casos con esa persona como responsable (En espera ya asignados, En revisión N1, En validación) — el criterio es tener agente asignado, no el estado del ticket. Los "en espera" que aún NO tienen agente asignado no aparecen aquí — se ven solo en el Tablero general hasta que alguien los toma. | Dentro de cada columna: por hora de asignación al agente (el primero asignado aparece primero) |
-| Nivel 2 – Especialistas | Vista de tres columnas, en este orden de izquierda a derecha: "Escalados" (en cola, esperando ser tomados), "En curso" (ya tomados por un desarrollador), "Pendiente Tech" (esperando que Tech lo tome, variante de escalado). | Columnas "Escalados" y "Pendiente Tech": por campo Rank de Jira. Columna "En curso": por hora de asignación al desarrollador |
-| Pendiente cliente | Tickets pausados esperando respuesta, con tiempo transcurrido visible. | Por hora en que pasó a pendiente |
+| Nivel 2 – Especialistas | Vista kanban con una columna por agente de N2 (CORRECCIÓN — ya no son columnas fijas "Escalados"/"En curso"). Cada columna lista los casos de esa persona: su ticket "En curso" primero (si tiene), luego sus "Escalados". "Pendiente Tech" no vive aquí — está en la pestaña "Pendiente" (ver abajo). | Dentro de cada columna: "En curso" primero, luego "Escalados" por campo Rank de Jira |
+| Pendiente (antes "Pendiente cliente") | Vista de dos columnas: "Pendiente cliente" (tickets pausados esperando respuesta del cliente, como ya existía) y "Pendiente Tech" (mudado desde Nivel 2 – Especialistas, tickets esperando a que un agente de Tech los tome). | Columna "Pendiente cliente": por hora en que pasó a ese estado. Columna "Pendiente Tech": por campo Rank de Jira (mismo criterio que tenía en Nivel 2) |
 
 ### Columnas del Tablero general
 
@@ -56,8 +56,37 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
 |---|---|
 | Nivel 0 – Nuevos | Recién creados, estado "En espera" (puede o no tener responsable ya asignado en Jira). FIFO estricto por hora de llegada. |
 | Nivel 1 – Revisión | En atención por N1. Incluye casos en validación (borde verde izq.). |
-| Nivel 2 – Especialistas | En curso (borde azul) y en cola, esta última ordenada por el campo Rank de Jira. Máx. 3 visibles, resto colapsado ("Ver más"). **Incluye el badge de posición por persona** (ver sección 5, "Badge de posición por persona") sobre el avatar del responsable — mismo cálculo y misma exclusión de tickets "Pendiente Tech" (que en el Tablero general no tienen columna propia, pero si un ticket corresponde a ese estado, tampoco lleva este badge). *(Esta es la columna única del Tablero general — no confundir con la vista de tres columnas "Escalados"/"En curso"/"Pendiente Tech" de la pestaña Nivel 2 – Especialistas, ver sección 5).* |
+| Nivel 2 – Especialistas | En curso (borde azul) y en cola, esta última ordenada por el campo Rank de Jira. Máx. 3 visibles, resto colapsado ("Ver más"). **Incluye el badge de posición por persona** (ver sección 5, "Badge de posición por persona") sobre el avatar del responsable — mismo cálculo y misma exclusión de tickets "Pendiente Tech" (que en el Tablero general no tienen columna propia, pero si un ticket corresponde a ese estado, tampoco lleva este badge). *(Esta es la columna única del Tablero general — no confundir con la vista de dos columnas "Escalados"/"En curso" de la pestaña Nivel 2 – Especialistas, ver sección 5. "Pendiente Tech" ya no vive en Nivel 2, se mudó a la pestaña "Pendiente").* |
 | Pendiente cliente | Con tiempo sin respuesta visible en la tarjeta, **incluyendo el color escalonado y la alerta crítica** definidos en la sección 5 ("Alerta de tiempo crítico en Pendiente cliente") — no solo un texto plano. |
+
+**Círculo de progreso junto al número de ticket (nuevo, aplica a las 4 columnas del
+Tablero general):**
+
+- Cada tarjeta del Tablero general (en las 4 columnas: Nivel 0, Nivel 1, Nivel 2,
+  Pendiente cliente) debe mostrar un **círculo de progreso tipo dona** (donut/ring chart)
+  con el porcentaje en el centro (ej. "30%"), ubicado **a la izquierda del número de
+  ticket**, en la misma fila (ej. "🔵30% ST-11986").
+- Usa el mismo dato de porcentaje que ya existe (tabla de estados, sección 3).
+- **Esto se agrega ADEMÁS de la barra de progreso lineal que ya existe en la tarjeta** —
+  no la reemplaza, ambas conviven (el círculo es un indicador compacto junto al número de
+  ticket; la barra lineal sigue donde ya estaba en el resto de la tarjeta).
+- Este círculo es exclusivo del Tablero general — no aplica a las tarjetas de las demás
+  pestañas (Nivel 1, Nivel 2, Pendiente), que siguen usando solo la barra lineal.
+
+**Tarjeta de ticket — encabezado en una sola línea (CORRECCIÓN)**
+
+> Con el círculo de progreso agregado, el encabezado de la tarjeta del Tablero general
+> (círculo + número de ticket + chip de estado) se estaba rompiendo a dos líneas en vez de
+> quedar en una sola fila compacta — se ve distorsionado.
+
+- El encabezado completo de la tarjeta — círculo de progreso, número de ticket, y chip de
+  estado — debe caber en **una sola línea**, sin que el chip se baje a una segunda línea.
+- Para lograrlo: **reduce el tamaño de fuente del chip de estado** (texto más pequeño y/o
+  padding más ajustado) y **reduce ligeramente el tamaño de fuente del número de ticket**
+  — ambos elementos pueden achicarse un poco sin perder legibilidad, priorizando que todo
+  el encabezado quepa en una fila.
+- Aplica a las tarjetas de las 4 columnas del Tablero general (Nivel 0, Nivel 1, Nivel 2,
+  Pendiente cliente).
 
 ## 5. Funcionalidades principales
 
@@ -122,56 +151,97 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
    mantener el mensaje genérico actual de "Sin resultados"/"0 resultados" — aplica a todas
    las pestañas por igual, incluido el Tablero general.
 
-**Vista de tres columnas en Nivel 2 – Especialistas**
+**Vista kanban por agente en Nivel 2 – Especialistas — CORRECCIÓN, nueva estructura**
 
-- La pestaña "Nivel 2 – Especialistas" se organiza en **tres columnas**, no una lista con
-  sección colapsable como antes. **Orden de izquierda a derecha: Escalados → En curso →
-  Pendiente Tech.**
-  - **Columna "Escalados":** tickets en cola, esperando ser **tomados** (iniciados) por el
-    desarrollador. Orden interno: por el campo **Rank de Jira** (ver sección 6 y 9 — no
-    recalcular prioridad + hora manualmente, respetar el orden que llega del API).
-  - **Columna "En curso":** tickets ya tomados, en trabajo activo. Borde azul izquierdo
-    (regla de la sección 6). Orden interno: por hora en que el desarrollador tomó el ticket.
-  - **Columna "Pendiente Tech":** variante de "Escalado a N2" — tickets esperando a que un
-    agente de Tech los tome, correspondiente al status real de Jira "Pendiente" (columna
-    PENDIENTE TECH). Mismo criterio de orden interno que "Escalados" (campo Rank de Jira).
+> Reemplaza la versión anterior de dos columnas por estado (Escalados / En curso). Ahora
+> es una vista kanban por persona, con el mismo espíritu que "Vista kanban por agente en
+> Nivel 1 – Revisión" (ver más abajo), pero para especialistas de N2.
+
+- La pestaña "Nivel 2 – Especialistas" se organiza como un tablero kanban: **una columna
+  por cada agente de N2** que tenga al menos un ticket asignado (en curso o escalado) — no
+  más columnas fijas por estado ("Escalados"/"En curso" ya no son columnas separadas).
+- Cada columna muestra el nombre del agente como encabezado, con un contador de casos
+  asignados a esa persona.
+- **Orden dentro de cada columna (de arriba hacia abajo):**
+  1. Primero, su ticket en estado **"En curso N2"** (si tiene uno) — es el que está
+     trabajando activamente ahora mismo. Conserva el borde azul izquierdo (regla de la
+     sección 6).
+  2. Luego, sus tickets en estado **"Escalado a N2"** (en cola, aún sin tomar), en el mismo
+     orden por **Rank de Jira** que ya se usaba (sección 6 y 9) — no recalcular
+     prioridad + hora manualmente.
+  - Esto reutiliza exactamente el mismo criterio de cálculo que ya existe para el "Badge de
+    posición por persona" (ver abajo) — el orden vertical de la columna y la numeración del
+    badge deben coincidir siempre.
+- **Chip/etiqueta de estado visible en cada tarjeta (CORRECCIÓN — se perdió al quitar las
+  columnas por estado, y el estilo de chip correcto es distinto al genérico de la lista):**
+  como ya no hay una columna "Escalados" o "En curso" que indique el estado de un vistazo,
+  cada tarjeta debe mostrar su **chip de estado** ("Escalado a N2" o "En curso N2"). **NO
+  uses el chip discreto (punto pequeño) definido en "Tarjeta de ticket en pestañas de
+  lista"** — en su lugar, reutiliza el **chip tipo píldora con fondo de color** que ya usa
+  el componente `TicketCard` del Tablero general (fondo de color suave, texto legible sin
+  punto/ícono) — el mismo componente/estilo, no uno nuevo. **Posición (CORRECCIÓN): el chip
+  va en la esquina superior derecha de la tarjeta**, alineado junto al número de ticket —
+  igual que en el Tablero general — no debajo del asunto/solicitante. Sin esta etiqueta, no
+  habría
+  forma de distinguir a simple vista si un ticket de una persona ya está en trabajo activo
+  o todavía está esperando ser tomado.
 - **Todo ticket escalado a N2 ya tiene un especialista asignado en Jira desde el momento del
-  escalado**, incluso si aún está en la columna "Escalados" o "Pendiente Tech" sin tomar. La
-  tarjeta debe mostrar avatar + nombre del responsable en **las tres** columnas — la
-  diferencia con "En curso" es si el especialista ya inició el trabajo, no si tiene o no
-  responsable asignado.
-- Cada columna muestra un contador de tickets en su encabezado.
+  escalado**, incluso si aún está sin tomar (en su posición "Escalados" dentro de la
+  columna). La tarjeta muestra avatar + nombre del responsable — que ya es evidente por
+  estar dentro de la columna de esa persona, pero se mantiene en la tarjeta por consistencia
+  con el resto de la app.
 - **El badge de prioridad (Critical/High/Medium/Low) NO se muestra visualmente en la
   tarjeta** — se eliminó la categorización visible por decisión del equipo. El dato de
   prioridad sigue existiendo y siendo relevante para el orden (vía el campo Rank de Jira,
   sección 6 y 9), solo se removió del diseño de la tarjeta.
-- **Badge de posición por persona (número junto al avatar del responsable):** el orden
-  global de la lista (por Rank de Jira) no cambia, pero cada tarjeta debe mostrar además un
-  pequeño número — superpuesto en la esquina del avatar del responsable, como una
-  notificación — indicando en qué posición está ese ticket dentro de la cola de **esa
-  persona específica**, no la posición global de la lista.
-  - **Cálculo:** para cada responsable, se cuenta primero su ticket en **"En curso"** (si
-    tiene uno ahí, ese es su posición 1), y luego se continúa la numeración con sus tickets
-    en **"Escalados"**, en el mismo orden interno de esa columna (Rank de Jira) — ej. si
-    Liceth tiene 1 ticket en curso y 2 en escalados, sus tickets muestran 1 (en curso), 2 y
-    3 (en escalados, en orden de Rank). Si no tiene ticket en curso, su primer ticket en
-    escalados ya es el 1.
-  - **"Pendiente Tech" queda fuera de este conteo** — los tickets en esa columna no llevan
-    este badge de posición (aunque sí mantienen avatar + nombre del responsable como ya
-    está definido).
-  - El conteo es independiente por persona — dos personas distintas pueden tener ambas un
-    ticket marcado "1" al mismo tiempo, cada una en su propia cola.
-  - **Alcance:** este badge aplica tanto en la pestaña "Nivel 2 – Especialistas" (columnas
-    Escalados y En curso) como en la **columna Nivel 2 del Tablero general** (sección 4) —
-    mismo cálculo en ambos lugares, ya que ambos reflejan los mismos tickets de Nivel 2.
-- El colapso de colas largas (sección 5, "Ver N más") aplica dentro de cada columna por
-  separado si supera 3 tickets — no se comparte el límite entre columnas.
+- **Badge de posición por persona (número junto al avatar del responsable) — se mantiene
+  (CONFIRMADO, aunque ahora es visualmente redundante con el orden de la columna):**
+  cada tarjeta muestra un pequeño número — superpuesto en la esquina del avatar del
+  responsable, como una notificación — indicando la posición del ticket dentro de la cola
+  de esa persona.
+  - **Cálculo (sin cambios):** su ticket en "En curso" (si tiene uno) es la posición 1;
+    sus tickets en "Escalados" continúan la numeración (2, 3...) en orden de Rank. Si no
+    tiene ticket en curso, su primer ticket en escalados ya es el 1.
+  - **Alcance:** este badge aplica tanto en esta vista kanban por agente de "Nivel 2 –
+    Especialistas" como en la **columna Nivel 2 del Tablero general** (sección 4) — mismo
+    cálculo en ambos lugares, ya que ambos reflejan los mismos tickets de Nivel 2 (el
+    Tablero general no se reestructura por persona, sigue siendo una sola columna con todos
+    los tickets de Nivel 2 mezclados — este badge simplemente sigue aplicándose ahí igual
+    que antes).
+- El colapso de colas largas (sección 5, "Ver N más") aplica dentro de cada columna de
+  agente por separado si supera 3 tickets.
 - El buscador global y el panel de detalle desplegable (botón "Ver detalle") aplican igual
-  en las tres columnas, reutilizando el diseño de "Tarjeta de ticket en pestañas de lista"
+  dentro de cada columna, reutilizando el diseño de "Tarjeta de ticket en pestañas de lista"
   descrito abajo.
-- Un ticket pasa de la columna "Escalados" a "En curso" en el momento en que un desarrollador
-  lo toma — este movimiento debe reflejarse en tiempo real (WebSocket/polling), igual que el
-  resto del tablero.
+- Un ticket que pasa de "Escalado a N2" a "En curso N2" (alguien lo toma) debe re-ordenarse
+  dentro de la misma columna de esa persona (pasa a ser el primero) — este movimiento debe
+  reflejarse en tiempo real (WebSocket/polling), igual que el resto del tablero.
+
+**Vista de dos columnas en Pendiente (antes "Pendiente cliente") — CORRECCIÓN, nueva
+estructura**
+
+> La pestaña antes llamada "Pendiente cliente" se renombra a **"Pendiente"** y pasa de ser
+> una lista única a organizarse en **dos columnas**. "Pendiente Tech" se muda aquí desde
+> "Nivel 2 – Especialistas" (que ahora vuelve a tener solo dos columnas, ver arriba).
+
+- **Columna "Pendiente cliente"** (izquierda): el contenido y comportamiento que ya existía
+  — tickets pausados esperando respuesta del cliente, con tiempo sin respuesta visible,
+  color escalonado y alerta crítica (ver "Alerta de tiempo crítico en Pendiente cliente"
+  más abajo — esa subsección no cambia). Orden: por hora en que pasó a ese estado.
+- **Columna "Pendiente Tech"** (derecha): el mismo contenido que tenía cuando vivía en
+  Nivel 2 – Especialistas — tickets esperando a que un agente de Tech los tome (status real
+  de Jira "Pendiente", columna PENDIENTE TECH). Orden: por campo Rank de Jira (mismo
+  criterio que tenía en Nivel 2). Mantiene avatar + nombre del responsable (ya asignado
+  desde el escalado, aunque no lo hayan tomado — regla de la sección 6).
+- El **badge de posición por persona** (definido en "Vista kanban por agente en Nivel 2 –
+  Especialistas") **NO aplica a la columna "Pendiente Tech"** — sigue igual que antes,
+  simplemente cambió de pestaña, no de comportamiento.
+- El buscador global y el colapso de colas largas (sección 5) aplican dentro de cada
+  columna por separado, igual que en las demás pestañas.
+- El **Tablero general NO se modifica** por este cambio — sigue mostrando sus columnas
+  Nivel 0/1/2/Pendiente cliente tal como estaban, sin una columna separada para "Pendiente
+  Tech" (esos tickets ya estaban incluidos dentro de la columna Nivel 2 del Tablero general,
+  eso no cambia).
 
 **Vista kanban por agente en Nivel 1 – Revisión**
 
@@ -228,7 +298,7 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
 - Esta alerta es puramente visual — no dispara ninguna acción automática desde la app (el
   cierre real del caso lo sigue haciendo Jira, no esta herramienta).
 
-**Tarjeta de ticket en pestañas de lista (Nivel 1, Nivel 2, Pendiente cliente)**
+**Tarjeta de ticket en pestañas de lista (Nivel 1, Nivel 2, Pendiente)**
 
 > Aplica al diseño de la tarjeta tal como aparece en la lista (antes de expandir el panel de
 > detalle). No confundir con el Modal de detalle ni el Panel de detalle desplegable descritos
@@ -361,9 +431,13 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
 
 - **Encabezado superior izquierdo:** logo "finkargo®" (texto o logo de marca), visible en
   todas las pantallas de la app, no solo en una vista.
-- **Sidebar de navegación lateral:** columna fija a la izquierda, fondo `#2D3172`, **ancho
-  compacto**. Pensado como espacio para futuros módulos/apps adicionales de Finkargo en la
-  misma barra.
+- **Sidebar de navegación lateral — diseño compacto (CORRECCIÓN):** columna fija a la
+  izquierda, fondo `#2D3172`, **ancho más angosto que el actual** — hoy sigue ocupando
+  demasiado espacio. Cada ítem del sidebar se rediseña como: **ícono claro y reconocible
+  arriba**, y **el texto de la etiqueta (ej. "Triage", "Soporte", "Tablero") en tamaño
+  pequeño debajo del ícono** — no un ítem ancho con ícono+texto en la misma línea como
+  está hoy. El ícono debe ser lo suficientemente diciente por sí solo para que el texto
+  pequeño sea un apoyo, no el elemento principal.
 - **Dos ítems de menú en el sidebar, en este orden de arriba hacia abajo (CONFIRMADO):**
   1. **"Triage de Soporte"** (primero) — nueva vista de **resumen ejecutivo** (dashboard),
      ver sección dedicada más abajo ("Dashboard resumen — 'Triage de Soporte'"). Es la vista
@@ -377,6 +451,18 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
   "Tablero"; sin pestañas internas para "Triage de Soporte").
 - **Pestañas a todo el ancho (dentro de "Tablero"):** las 4 pestañas deben distribuirse
   ocupando todo el ancho disponible del área de contenido.
+
+### Diseño responsive (nuevo requisito general)
+
+- Toda la aplicación (Tablero, sus 4 pestañas, y el dashboard "Triage de Soporte") debe
+  ser **responsive**: el contenido se acomoda al ancho de pantalla disponible sin que las
+  tarjetas, columnas ni texto se distorsionen, se corten mal, o se monten unos sobre otros.
+- Esto incluye particularmente la fila de encabezado de cada tarjeta de ticket (número de
+  ticket + chip de estado) — ver el ajuste específico en "Tarjeta de ticket — encabezado
+  en una sola línea" más abajo, que resuelve un caso concreto donde esto se estaba rompiendo.
+- No se define aquí un breakpoint específico de "versión móvil" — el objetivo por ahora es
+  que la app se vea bien en anchos de escritorio/laptop variables (ventanas más angostas o
+  más anchas), no necesariamente una adaptación completa a pantallas de celular.
 
 ## Dashboard resumen — "Triage de Soporte" (nueva vista)
 
@@ -511,7 +597,7 @@ Nivel 0 (Nuevo) → Nivel 1 (Revisión) → Nivel 2 (Especialista) → Validaci�
 | SIN REVISIÓN | Esperando por ayuda | En espera |
 | GESTIÓN LVL 1 | Gestión Nivel 1 | En revisión N1 |
 | ESCALADO LVL 2 | Escalado Nivel 2 | Escalado a N2 |
-| PENDIENTE TECH | Pendiente | Pendiente Tech (columna propia en Nivel 2, ver sección 5) |
+| PENDIENTE TECH | Pendiente | Pendiente Tech (columna propia en la pestaña "Pendiente", ver sección 5 — antes vivía en Nivel 2) |
 | GESTIÓN LVL 2 | Gestion Nivel 2 (sin tilde, tal cual en Jira) | En curso N2 |
 | ESPERANDO RESPUESTA CLIENTE | Esperando respuesta de cliente | Pendiente cliente |
 | EN Validación | Proceso de Validación | En validación |
