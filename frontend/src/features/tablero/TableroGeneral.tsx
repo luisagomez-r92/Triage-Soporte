@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import BoardColumn from '../../components/board/BoardColumn'
+import CountryFilter from '../../components/CountryFilter'
 import SearchBar from '../../components/SearchBar'
 import SearchResultNavigator from '../../components/SearchResultNavigator'
 import SearchResultsList from '../../components/board/SearchResultsList'
@@ -9,7 +10,7 @@ import { useN2PositionBadges } from '../../hooks/useN2PositionBadges'
 import { useSearch } from '../../hooks/useSearch'
 import { useSearchResultNavigation } from '../../hooks/useSearchResultNavigation'
 import { useTicketSearchMessage } from '../../hooks/useTicketSearchMessage'
-import type { Ticket, TicketStatus } from '../../types/ticket'
+import type { PaisFiltro, Ticket, TicketStatus } from '../../types/ticket'
 
 const COLUMNS: { title: string; estados: TicketStatus[] }[] = [
   { title: 'Nivel 0 – Nuevos', estados: ['En espera'] },
@@ -34,22 +35,30 @@ function getTicketsForColumn(tickets: Ticket[], estados: TicketStatus[]) {
 
 interface TableroGeneralProps {
   tickets: Ticket[]
+  pais: PaisFiltro
+  onPaisChange: (pais: PaisFiltro) => void
 }
 
-function TableroGeneral({ tickets }: TableroGeneralProps) {
-  const { query, setQuery, matchedIds, resultCount } = useSearch(tickets)
+function TableroGeneral({ tickets, pais, onPaisChange }: TableroGeneralProps) {
+  // REQUIREMENTS.md §5 "Filtro de país 'Ubicado en'" — primer paso, antes de cualquier
+  // otra cosa: los tickets que no correspondan al país elegido quedan fuera de todo lo
+  // que se renderiza/cuenta en esta pestaña (columnas, buscador, contador).
+  const ticketsPais = pais === 'Todos' ? tickets : tickets.filter((ticket) => ticket.pais === pais)
+
+  const { query, setQuery, matchedIds, resultCount } = useSearch(ticketsPais)
   // Caso 1 ("activo en otra pestaña") nunca se dispara aquí: la búsqueda del Tablero ya
   // corre sobre el set completo de tickets (no un subconjunto por pestaña), así que si el
   // ticket está activo ya cuenta como coincidencia local — REQUIREMENTS.md §5.
   const { message: searchMessage } = useTicketSearchMessage(query, resultCount, tickets)
-  // Badge de posición por persona (REQUIREMENTS.md §4/§5) — mismo hook que usa la
-  // pestaña Nivel 2 – Especialistas, así ambas muestran el mismo número.
+  // Badge de posición por persona (REQUIREMENTS.md §4/§5) — sobre el set COMPLETO sin
+  // filtrar por país (igual que ya ignora la búsqueda): representa la posición real de la
+  // persona en Jira, no debe cambiar según lo que el país filtrado oculte visualmente.
   const posicionPorTicket = useN2PositionBadges(tickets)
   const getPositionBadge = (ticket: Ticket) => posicionPorTicket.get(ticket.id)
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
 
   const searchResults = matchedIds
-    ? tickets
+    ? ticketsPais
         .filter((ticket) => matchedIds.has(ticket.id))
         .map((ticket) => ({
           ticket,
@@ -63,9 +72,9 @@ function TableroGeneral({ tickets }: TableroGeneralProps) {
   const orderedMatchedIds = useMemo(() => {
     if (!matchedIds) return []
     return COLUMNS.flatMap(({ estados }) =>
-      getTicketsForColumn(tickets, estados).filter((ticket) => matchedIds.has(ticket.id)),
+      getTicketsForColumn(ticketsPais, estados).filter((ticket) => matchedIds.has(ticket.id)),
     ).map((ticket) => ticket.id)
-  }, [matchedIds, tickets])
+  }, [matchedIds, ticketsPais])
 
   const {
     activeIndex: resultIndex,
@@ -76,13 +85,16 @@ function TableroGeneral({ tickets }: TableroGeneralProps) {
 
   return (
     <div className="bg-white p-6">
-      <div className="mb-4">
-        <SearchBar
-          totalCount={tickets.length}
-          query={query}
-          onQueryChange={setQuery}
-          resultCount={resultCount}
-        />
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <div className="min-w-0 flex-1">
+          <SearchBar
+            totalCount={ticketsPais.length}
+            query={query}
+            onQueryChange={setQuery}
+            resultCount={resultCount}
+          />
+        </div>
+        <CountryFilter value={pais} onChange={onPaisChange} />
       </div>
       {matchedIds && (
         <div className="mb-4">
@@ -98,7 +110,7 @@ function TableroGeneral({ tickets }: TableroGeneralProps) {
           <BoardColumn
             key={title}
             title={title}
-            tickets={getTicketsForColumn(tickets, estados)}
+            tickets={getTicketsForColumn(ticketsPais, estados)}
             matchedIds={matchedIds}
             onTicketClick={setSelectedTicket}
             getPositionBadge={getPositionBadge}

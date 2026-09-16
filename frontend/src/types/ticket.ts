@@ -11,6 +11,10 @@ export type TicketPriority = 'Critical' | 'High' | 'Medium' | 'Low'
 
 export type TicketNivel = 'N1' | 'N2'
 
+// REQUIREMENTS.md §5 "Filtro de país 'Ubicado en'" — exclusivo del módulo "Tablero".
+export type Pais = 'Colombia' | 'México'
+export type PaisFiltro = 'Todos' | Pais
+
 export interface TicketResponsable {
   nombre: string
   // Ausente en "Pendiente cliente": el ticket pudo pausarse estando en N1 o en N2 y,
@@ -38,4 +42,6 @@ export interface Ticket {
   // Campo Rank de Jira (LexoRank) — solo relevante en la cola de "Escalado a N2".
   // Se compara lexicográficamente tal cual, nunca se recalcula (REQUIREMENTS.md §6, §9).
   rank?: string
+  // Campo "Country" de Jira — ausente si el ticket no lo tiene poblado.
+  pais?: Pais
 }

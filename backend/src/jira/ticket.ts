@@ -15,6 +15,8 @@ export type TicketPriority = 'Critical' | 'High' | 'Medium' | 'Low'
 
 export type TicketNivel = 'N1' | 'N2'
 
+export type Pais = 'Colombia' | 'México'
+
 export interface TicketResponsable {
   nombre: string
   nivel?: TicketNivel
@@ -37,4 +39,7 @@ export interface Ticket {
   responsable?: TicketResponsable
   historial?: TicketHistoryEntry[]
   rank?: string
+  // Campo "Country" de Jira (customfield_10081) — REQUIREMENTS.md §5 "Filtro de país
+  // 'Ubicado en'". Ausente si el ticket no tiene el campo poblado en Jira.
+  pais?: Pais
 }

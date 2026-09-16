@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import CountryFilter from '../../components/CountryFilter'
 import SearchBar from '../../components/SearchBar'
 import SearchResultNavigator from '../../components/SearchResultNavigator'
 import SearchStatusMessage from '../../components/SearchStatusMessage'
@@ -7,7 +8,7 @@ import { compararPorRank } from '../../hooks/useN2PositionBadges'
 import { useSearch } from '../../hooks/useSearch'
 import { useSearchResultNavigation } from '../../hooks/useSearchResultNavigation'
 import { useTicketSearchMessage } from '../../hooks/useTicketSearchMessage'
-import type { Ticket, TicketStatus } from '../../types/ticket'
+import type { PaisFiltro, Ticket, TicketStatus } from '../../types/ticket'
 
 const PENDIENTE_ESTADOS: TicketStatus[] = ['Pendiente cliente', 'Pendiente Tech']
 
@@ -20,10 +21,15 @@ function getPendienteKey(ticket: Ticket): number {
 
 interface PendienteClienteProps {
   tickets: Ticket[]
+  pais: PaisFiltro
+  onPaisChange: (pais: PaisFiltro) => void
 }
 
-function PendienteCliente({ tickets }: PendienteClienteProps) {
-  const pendienteTabTickets = tickets.filter((ticket) => PENDIENTE_ESTADOS.includes(ticket.estado))
+function PendienteCliente({ tickets, pais, onPaisChange }: PendienteClienteProps) {
+  // REQUIREMENTS.md §5 "Filtro de país 'Ubicado en'" — primer paso, antes de separar en
+  // las 2 columnas: un ticket que no corresponda al país elegido no aparece en ninguna.
+  const ticketsPais = pais === 'Todos' ? tickets : tickets.filter((ticket) => ticket.pais === pais)
+  const pendienteTabTickets = ticketsPais.filter((ticket) => PENDIENTE_ESTADOS.includes(ticket.estado))
   const { query, setQuery, matchedIds, resultCount } = useSearch(pendienteTabTickets)
   const { message: searchMessage } = useTicketSearchMessage(query, resultCount, tickets)
   const [expandedTicketId, setExpandedTicketId] = useState<string | null>(null)
@@ -60,13 +66,16 @@ function PendienteCliente({ tickets }: PendienteClienteProps) {
 
   return (
     <div className="bg-white p-6">
-      <div className="mb-4">
-        <SearchBar
-          totalCount={pendienteTabTickets.length}
-          query={query}
-          onQueryChange={setQuery}
-          resultCount={resultCount}
-        />
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <div className="min-w-0 flex-1">
+          <SearchBar
+            totalCount={pendienteTabTickets.length}
+            query={query}
+            onQueryChange={setQuery}
+            resultCount={resultCount}
+          />
+        </div>
+        <CountryFilter value={pais} onChange={onPaisChange} />
       </div>
 
       {resultCount === 0 && (

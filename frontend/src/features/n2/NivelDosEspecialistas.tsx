@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import CountryFilter from '../../components/CountryFilter'
 import SearchBar from '../../components/SearchBar'
 import SearchResultNavigator from '../../components/SearchResultNavigator'
 import SearchStatusMessage from '../../components/SearchStatusMessage'
@@ -7,7 +8,7 @@ import { useN2PositionBadges } from '../../hooks/useN2PositionBadges'
 import { useSearch } from '../../hooks/useSearch'
 import { useSearchResultNavigation } from '../../hooks/useSearchResultNavigation'
 import { useTicketSearchMessage } from '../../hooks/useTicketSearchMessage'
-import type { Ticket, TicketStatus } from '../../types/ticket'
+import type { PaisFiltro, Ticket, TicketStatus } from '../../types/ticket'
 
 // REQUIREMENTS.md §5 "Vista kanban por agente en Nivel 2 – Especialistas" — reemplaza las
 // columnas fijas "Escalados"/"En curso". Todo ticket en estos estados ya tiene especialista
@@ -17,10 +18,16 @@ const NIVEL2_ESTADOS: TicketStatus[] = ['Escalado a N2', 'En curso N2']
 
 interface NivelDosEspecialistasProps {
   tickets: Ticket[]
+  pais: PaisFiltro
+  onPaisChange: (pais: PaisFiltro) => void
 }
 
-function NivelDosEspecialistas({ tickets }: NivelDosEspecialistasProps) {
-  const nivel2Tickets = tickets.filter(
+function NivelDosEspecialistas({ tickets, pais, onPaisChange }: NivelDosEspecialistasProps) {
+  // REQUIREMENTS.md §5 "Filtro de país 'Ubicado en'" — primer paso, antes de agrupar por
+  // agente: un ticket que no corresponda al país elegido no aparece en ninguna columna.
+  const ticketsPais = pais === 'Todos' ? tickets : tickets.filter((ticket) => ticket.pais === pais)
+
+  const nivel2Tickets = ticketsPais.filter(
     (ticket): ticket is Ticket & { responsable: NonNullable<Ticket['responsable']> } =>
       NIVEL2_ESTADOS.includes(ticket.estado) && Boolean(ticket.responsable),
   )
@@ -77,13 +84,16 @@ function NivelDosEspecialistas({ tickets }: NivelDosEspecialistasProps) {
 
   return (
     <div className="bg-white p-6">
-      <div className="mb-4">
-        <SearchBar
-          totalCount={nivel2Tickets.length}
-          query={query}
-          onQueryChange={setQuery}
-          resultCount={resultCount}
-        />
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <div className="min-w-0 flex-1">
+          <SearchBar
+            totalCount={nivel2Tickets.length}
+            query={query}
+            onQueryChange={setQuery}
+            resultCount={resultCount}
+          />
+        </div>
+        <CountryFilter value={pais} onChange={onPaisChange} />
       </div>
 
       {resultCount === 0 && (

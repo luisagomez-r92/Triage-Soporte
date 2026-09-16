@@ -9,6 +9,7 @@ import NivelDosEspecialistas from './features/n2/NivelDosEspecialistas'
 import PendienteCliente from './features/pendiente/PendienteCliente'
 import TriageDeSoporte from './features/triage/TriageDeSoporte'
 import { useTickets } from './hooks/useTickets'
+import type { PaisFiltro } from './types/ticket'
 
 type TabId = 'tablero' | 'n1' | 'n2' | 'pendiente'
 
@@ -22,6 +23,10 @@ const TABS: { id: TabId; label: string }[] = [
 function App() {
   const [activeSection, setActiveSection] = useState<SidebarSection>('triage')
   const [activeTab, setActiveTab] = useState<TabId>('tablero')
+  // REQUIREMENTS.md §5 "Filtro de país 'Ubicado en'" — un solo estado compartido por las
+  // 4 pestañas del módulo "Tablero", exclusivo de este módulo (no llega a "Triage de
+  // Soporte"). No persiste entre sesiones a propósito.
+  const [pais, setPais] = useState<PaisFiltro>('Todos')
   const { tickets, loading, error, isRefreshing, refreshError, lastUpdatedAt, refetch } =
     useTickets()
 
@@ -70,10 +75,18 @@ function App() {
 
               {!loading && !error && (
                 <>
-                  {activeTab === 'tablero' && <TableroGeneral tickets={tickets} />}
-                  {activeTab === 'n1' && <NivelUnoRevision tickets={tickets} />}
-                  {activeTab === 'n2' && <NivelDosEspecialistas tickets={tickets} />}
-                  {activeTab === 'pendiente' && <PendienteCliente tickets={tickets} />}
+                  {activeTab === 'tablero' && (
+                    <TableroGeneral tickets={tickets} pais={pais} onPaisChange={setPais} />
+                  )}
+                  {activeTab === 'n1' && (
+                    <NivelUnoRevision tickets={tickets} pais={pais} onPaisChange={setPais} />
+                  )}
+                  {activeTab === 'n2' && (
+                    <NivelDosEspecialistas tickets={tickets} pais={pais} onPaisChange={setPais} />
+                  )}
+                  {activeTab === 'pendiente' && (
+                    <PendienteCliente tickets={tickets} pais={pais} onPaisChange={setPais} />
+                  )}
                 </>
               )}
             </>

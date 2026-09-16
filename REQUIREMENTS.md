@@ -107,6 +107,33 @@ Tablero general):**
 - Muestra conteo de resultados en tiempo real (este es un conteo aparte del "Todos los casos
   [N]" de arriba — aparece solo mientras se está escribiendo algo en el buscador).
 
+**Filtro de país "Ubicado en" (nuevo — exclusivo del módulo "Tablero")**
+
+- Selector junto al buscador global, en cada una de las 4 pestañas (Tablero general,
+  Nivel 1, Nivel 2, Pendiente), con estas opciones: **Todos** (valor por defecto — sin
+  filtrar, comportamiento actual), **Colombia**, **México**.
+- **Es un filtro compartido/global dentro del módulo "Tablero":** al elegir un país en
+  cualquier pestaña, el filtro se mantiene activo al cambiar de pestaña — no es necesario
+  volver a seleccionarlo en cada una. Es un solo estado de filtro para las 4 pestañas.
+- **Dato de origen (CONFIRMADO):** el país del ticket viene del campo **"Country"** de
+  Jira (custom field con valores "Colombia" / "México" — confirmar el nombre técnico
+  exacto del campo, ej. `customfield_XXXXX`, al momento de implementar el mapeo, igual que
+  se hizo con "Company" o "Rank").
+- El ticket transformado (el mismo objeto que ya usan las 4 pestañas) debe incluir un
+  campo `pais` con este valor, para poder filtrar en el frontend sin llamadas adicionales
+  a Jira (los datos ya vienen completos por el polling existente).
+- Al aplicar el filtro, se comporta igual que el buscador: los tickets que no correspondan
+  al país seleccionado se ocultan (o se atenúan, siguiendo el mismo patrón visual ya usado
+  para resultados de búsqueda) en las 4 pestañas — incluida la vista kanban por agente de
+  Nivel 1 y Nivel 2 (si una persona solo tiene tickets del país no seleccionado, su columna
+  puede quedar vacía o no mostrarse, a definir visualmente sin romper el layout).
+- El contador "Todos los casos [N]" debe reflejar el total ya filtrado por país, no el
+  total absoluto, cuando el filtro esté activo en algo distinto de "Todos".
+- **Exclusivo del módulo "Tablero"** — no aplica al dashboard "Triage de Soporte" (sección
+  aparte), que no se modifica por este cambio.
+- No es necesario que la selección persista entre sesiones (recargar la página puede
+  volver a "Todos" por defecto), salvo que se decida lo contrario más adelante.
+
 **Navegación entre resultados de búsqueda (scroll automático + indicador flotante)**
 
 > Resuelve que un resultado resaltado quede fuera de la vista visible (ej. al final de una

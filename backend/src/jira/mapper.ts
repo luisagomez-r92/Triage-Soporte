@@ -1,7 +1,11 @@
-import type { Ticket, TicketHistoryEntry, TicketNivel, TicketPriority, TicketStatus } from './ticket'
+import type { Pais, Ticket, TicketHistoryEntry, TicketNivel, TicketPriority, TicketStatus } from './ticket'
 
 // Campos que pedimos a la API Agile — ver REQUIREMENTS.md §9 ("Mapeo de estados Jira →
-// REQUIREMENTS.md — CONFIRMADO"). customfield_10019 = Rank, customfield_10076 = Company.
+// REQUIREMENTS.md — CONFIRMADO"). customfield_10019 = Rank, customfield_10076 = Company,
+// customfield_10081 = Country (REQUIREMENTS.md §5 "Filtro de país 'Ubicado en'" —
+// confirmado por consulta directa a /rest/api/3/field + un issue con fields=*all; el
+// otro candidato por nombre, customfield_11154 "País", pertenece a otro proyecto y nunca
+// viene poblado en este board).
 export const JIRA_FIELDS = [
   'summary',
   'status',
@@ -11,6 +15,7 @@ export const JIRA_FIELDS = [
   'created',
   'customfield_10019',
   'customfield_10076',
+  'customfield_10081',
 ] as const
 
 // statusCategory != Done: excluye los ~11,886 issues históricos/cerrados del tablero,
@@ -29,6 +34,7 @@ export interface JiraIssue {
     created: string
     customfield_10019?: string | null
     customfield_10076?: string | null
+    customfield_10081?: { value: string } | null
   }
 }
 
@@ -52,6 +58,13 @@ const PRIORIDAD_BY_JIRA_PRIORITY: Record<string, TicketPriority> = {
   Medium: 'Medium',
   Low: 'Low',
   Lowest: 'Low',
+}
+
+// REQUIREMENTS.md §5 "Filtro de país 'Ubicado en'": Jira devuelve "Mexico" sin tilde — se
+// normaliza a "México" para mostrar, igual que se normaliza el asunto a tipo oración.
+const PAIS_BY_JIRA_VALUE: Record<string, Pais> = {
+  Colombia: 'Colombia',
+  Mexico: 'México',
 }
 
 // Prioridad solo es visible en tickets de Nivel 2 (REQUIREMENTS.md §6).
@@ -103,6 +116,9 @@ export function mapJiraIssueToTicket(issue: JiraIssue): Ticket | null {
       ? PRIORIDAD_BY_JIRA_PRIORITY[prioridadJira]
       : undefined
 
+  const paisJira = issue.fields.customfield_10081?.value
+  const pais = paisJira ? PAIS_BY_JIRA_VALUE[paisJira] : undefined
+
   return {
     id: issue.key,
     titulo: toSentenceCase(issue.fields.summary),
@@ -115,6 +131,7 @@ export function mapJiraIssueToTicket(issue: JiraIssue): Ticket | null {
     // Diferido — REQUIREMENTS.md §9 "Historial del ticket — diferido a un paso posterior".
     historial: undefined,
     rank: issue.fields.customfield_10019 ?? undefined,
+    pais,
   }
 }
 

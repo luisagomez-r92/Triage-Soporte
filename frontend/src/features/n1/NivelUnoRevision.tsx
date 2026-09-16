@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import CountryFilter from '../../components/CountryFilter'
 import SearchBar from '../../components/SearchBar'
 import SearchResultNavigator from '../../components/SearchResultNavigator'
 import SearchStatusMessage from '../../components/SearchStatusMessage'
@@ -6,7 +7,7 @@ import TicketListColumn from '../../components/TicketListColumn'
 import { useSearch } from '../../hooks/useSearch'
 import { useSearchResultNavigation } from '../../hooks/useSearchResultNavigation'
 import { useTicketSearchMessage } from '../../hooks/useTicketSearchMessage'
-import type { Ticket, TicketStatus } from '../../types/ticket'
+import type { PaisFiltro, Ticket, TicketStatus } from '../../types/ticket'
 
 // El criterio de esta vista es tener agente asignado, no un estado específico
 // (REQUIREMENTS.md §4/§5): un "En espera" ya asignado en Jira SÍ aparece en la columna
@@ -26,10 +27,16 @@ function getAsignacionKey(ticket: Ticket): number {
 
 interface NivelUnoRevisionProps {
   tickets: Ticket[]
+  pais: PaisFiltro
+  onPaisChange: (pais: PaisFiltro) => void
 }
 
-function NivelUnoRevision({ tickets }: NivelUnoRevisionProps) {
-  const nivelUnoTickets = tickets.filter(
+function NivelUnoRevision({ tickets, pais, onPaisChange }: NivelUnoRevisionProps) {
+  // REQUIREMENTS.md §5 "Filtro de país 'Ubicado en'" — primer paso, antes de agrupar por
+  // agente: un ticket que no corresponda al país elegido no aparece en ninguna columna.
+  const ticketsPais = pais === 'Todos' ? tickets : tickets.filter((ticket) => ticket.pais === pais)
+
+  const nivelUnoTickets = ticketsPais.filter(
     (ticket): ticket is Ticket & { responsable: NonNullable<Ticket['responsable']> } =>
       NIVEL1_ESTADOS.includes(ticket.estado) && Boolean(ticket.responsable),
   )
@@ -73,13 +80,16 @@ function NivelUnoRevision({ tickets }: NivelUnoRevisionProps) {
 
   return (
     <div className="bg-white p-6">
-      <div className="mb-4">
-        <SearchBar
-          totalCount={nivelUnoTickets.length}
-          query={query}
-          onQueryChange={setQuery}
-          resultCount={resultCount}
-        />
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <div className="min-w-0 flex-1">
+          <SearchBar
+            totalCount={nivelUnoTickets.length}
+            query={query}
+            onQueryChange={setQuery}
+            resultCount={resultCount}
+          />
+        </div>
+        <CountryFilter value={pais} onChange={onPaisChange} />
       </div>
 
       {resultCount === 0 && (
