@@ -222,19 +222,41 @@ Tablero general):**
   prioridad sigue existiendo y siendo relevante para el orden (vía el campo Rank de Jira,
   sección 6 y 9), solo se removió del diseño de la tarjeta.
 - **Badge de posición por persona (número junto al avatar del responsable) — se mantiene
-  (CONFIRMADO, aunque ahora es visualmente redundante con el orden de la columna):**
-  cada tarjeta muestra un pequeño número — superpuesto en la esquina del avatar del
-  responsable, como una notificación — indicando la posición del ticket dentro de la cola
-  de esa persona.
-  - **Cálculo (sin cambios):** su ticket en "En curso" (si tiene uno) es la posición 1;
-    sus tickets en "Escalados" continúan la numeración (2, 3...) en orden de Rank. Si no
-    tiene ticket en curso, su primer ticket en escalados ya es el 1.
-  - **Alcance:** este badge aplica tanto en esta vista kanban por agente de "Nivel 2 –
-    Especialistas" como en la **columna Nivel 2 del Tablero general** (sección 4) — mismo
-    cálculo en ambos lugares, ya que ambos reflejan los mismos tickets de Nivel 2 (el
-    Tablero general no se reestructura por persona, sigue siendo una sola columna con todos
-    los tickets de Nivel 2 mezclados — este badge simplemente sigue aplicándose ahí igual
-    que antes).
+  (CONFIRMADO):** cada tarjeta muestra un pequeño número — superpuesto en la esquina del
+  avatar del responsable, como una notificación — indicando la posición del ticket dentro
+  de la cola de esa persona.
+  - **Cálculo (CORRECCIÓN — algoritmo correcto, reemplaza versiones anteriores de esta
+    regla):** el número **NO se calcula reordenando los tickets de esa persona por su
+    cuenta** (ej. "en curso primero por hora, luego escalados por rank" como un paso
+    aparte). En su lugar, se calcula **recorriendo la lista de tickets en el orden en que
+    YA se muestra** en la vista correspondiente (ese orden ya es correcto — viene del Rank
+    de Jira y de las reglas ya establecidas, no se toca) y llevando un **contador
+    independiente por persona** que se incrementa cada vez que aparece un ticket de esa
+    persona en el recorrido — sin importar cuántos tickets de otras personas aparezcan
+    intercalados en el medio.
+  - **Ejemplo (columna Nivel 2 del Tablero general, de arriba hacia abajo):** si la lista
+    ya muestra, en este orden, 2 tickets de Liceth, luego 1 de Roy, luego 2 más de Liceth,
+    el resultado correcto es: Liceth → 1, Liceth → 2, Roy → 1, Liceth → 3, Liceth → 4. El
+    contador de Roy es independiente del de Liceth (empieza en 1 para él), y el de Liceth
+    continúa donde iba (3, no reinicia) aunque el ticket de Roy se haya intercalado.
+  - **Aplica igual sin importar el estado del ticket** (Escalado a N2 o En curso) — es el
+    mismo recorrido y el mismo contador por persona para toda la lista, no un cálculo
+    distinto por estado.
+  - **Alcance e implementación (CORRECCIÓN):** este mismo principio aplica tanto en la
+    columna Nivel 2 del Tablero general (recorriendo esa lista combinada, en su orden ya
+    establecido) como en cada columna de agente de la pestaña "Nivel 2 – Especialistas"
+    (recorriendo esa columna, en su orden ya establecido — ahí, al ser una sola persona por
+    columna, el resultado ya era 1, 2, 3... de forma natural). **No es necesariamente el
+    mismo cálculo hecho por una función que reordena de antemano** — la función/hook
+    compartido debe tomar como entrada la lista YA en su orden de visualización final (la
+    que se va a renderizar) y simplemente contar por persona sobre ese recorrido, en vez de
+    reordenar tickets con un criterio propio (en curso/hora, escalados/rank) desconectado
+    del orden real que ya tiene cada vista.
+  - **Nota de validación de negocio (no técnica):** que una persona tenga varios tickets
+    "En curso" simultáneamente es una excepción, no la norma — vale la pena que el equipo
+    revise periódicamente si esto refleja un caso legítimo o un descuido en Jira (alguien
+    olvidó cerrar/mover un ticket anterior antes de tomar uno nuevo). Esto no bloquea la
+    numeración, que debe funcionar igual en ambos casos.
 - El colapso de colas largas (sección 5, "Ver N más") aplica dentro de cada columna de
   agente por separado si supera 3 tickets.
 - El buscador global y el panel de detalle desplegable (botón "Ver detalle") aplican igual

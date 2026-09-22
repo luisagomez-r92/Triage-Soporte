@@ -50,10 +50,13 @@ function TableroGeneral({ tickets, pais, onPaisChange }: TableroGeneralProps) {
   // corre sobre el set completo de tickets (no un subconjunto por pestaña), así que si el
   // ticket está activo ya cuenta como coincidencia local — REQUIREMENTS.md §5.
   const { message: searchMessage } = useTicketSearchMessage(query, resultCount, tickets)
-  // Badge de posición por persona (REQUIREMENTS.md §4/§5) — sobre el set COMPLETO sin
-  // filtrar por país (igual que ya ignora la búsqueda): representa la posición real de la
-  // persona en Jira, no debe cambiar según lo que el país filtrado oculte visualmente.
-  const posicionPorTicket = useN2PositionBadges(tickets)
+  // Badge de posición por persona (REQUIREMENTS.md §4/§5) — CORRECCIÓN: se le pasa la
+  // lista ya en el mismo orden en que se renderiza la columna Nivel 2 (Rank de Jira,
+  // "Pendiente Tech" excluido porque no lleva badge); el hook solo cuenta por persona
+  // sobre ese recorrido, no reordena nada por su cuenta.
+  const posicionPorTicket = useN2PositionBadges(
+    getTicketsForColumn(ticketsPais, ['En curso N2', 'Escalado a N2']),
+  )
   const getPositionBadge = (ticket: Ticket) => posicionPorTicket.get(ticket.id)
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
 

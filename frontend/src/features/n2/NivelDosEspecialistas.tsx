@@ -4,7 +4,7 @@ import SearchBar from '../../components/SearchBar'
 import SearchResultNavigator from '../../components/SearchResultNavigator'
 import SearchStatusMessage from '../../components/SearchStatusMessage'
 import TicketListColumn from '../../components/TicketListColumn'
-import { useN2PositionBadges } from '../../hooks/useN2PositionBadges'
+import { compararPorRank, getAsignacionKey, useN2PositionBadges } from '../../hooks/useN2PositionBadges'
 import { useSearch } from '../../hooks/useSearch'
 import { useSearchResultNavigation } from '../../hooks/useSearchResultNavigation'
 import { useTicketSearchMessage } from '../../hooks/useTicketSearchMessage'
@@ -15,6 +15,17 @@ import type { PaisFiltro, Ticket, TicketStatus } from '../../types/ticket'
 // asignado en Jira desde el escalado, así que el filtro de responsable es solo para
 // estrechar el tipo (nunca debería excluir nada en la práctica).
 const NIVEL2_ESTADOS: TicketStatus[] = ['Escalado a N2', 'En curso N2']
+
+// REQUIREMENTS.md §4/§5 "Orden dentro de cada columna": En curso primero (si tiene, por
+// hora en que lo tomó), luego Escalados por Rank de Jira. Esto establece el orden visual
+// — es independiente del conteo del badge de posición (useN2PositionBadges), que solo
+// recorre esa lista ya ordenada, no decide el orden por su cuenta.
+function compararOrdenColumna(a: Ticket, b: Ticket): number {
+  const aEnCurso = a.estado === 'En curso N2'
+  const bEnCurso = b.estado === 'En curso N2'
+  if (aEnCurso !== bEnCurso) return aEnCurso ? -1 : 1
+  return aEnCurso ? getAsignacionKey(a) - getAsignacionKey(b) : compararPorRank(a, b)
+}
 
 interface NivelDosEspecialistasProps {
   tickets: Ticket[]
@@ -39,14 +50,8 @@ function NivelDosEspecialistas({ tickets, pais, onPaisChange }: NivelDosEspecial
     ? nivel2Tickets.filter((ticket) => matchedIds.has(ticket.id))
     : nivel2Tickets
 
-  // Badge de posición por persona (REQUIREMENTS.md §5) — hook compartido con la columna
-  // Nivel 2 del Tablero general, calculado sobre el set de N2 completo (no sobre
-  // `visibleTickets`) para que el número no cambie según lo que se esté buscando. Se
-  // reutiliza también para ordenar cada columna, así el orden vertical y el número del
-  // badge coinciden siempre por construcción (en curso primero, luego escalados por Rank).
-  const posicionPorTicket = useN2PositionBadges(tickets)
-  const getPositionBadge = (ticket: Ticket) => posicionPorTicket.get(ticket.id)
-
+  // Orden visual de cada columna (REQUIREMENTS.md §4/§5): en curso primero, luego
+  // escalados por Rank — independiente y anterior al cálculo del badge.
   const columnas = useMemo(() => {
     const porAgente = new Map<string, Ticket[]>()
     for (const ticket of visibleTickets) {
@@ -58,12 +63,22 @@ function NivelDosEspecialistas({ tickets, pais, onPaisChange }: NivelDosEspecial
     return Array.from(porAgente.entries())
       .map(([agente, tickets]) => ({
         agente,
-        tickets: [...tickets].sort(
-          (a, b) => (posicionPorTicket.get(a.id) ?? 0) - (posicionPorTicket.get(b.id) ?? 0),
-        ),
+        tickets: [...tickets].sort(compararOrdenColumna),
       }))
       .sort((a, b) => a.agente.localeCompare(b.agente))
-  }, [visibleTickets, posicionPorTicket])
+  }, [visibleTickets])
+
+  // Badge de posición por persona (REQUIREMENTS.md §5) — CORRECCIÓN: se le pasa la lista
+  // ya ordenada de `columnas` (arriba), concatenada en el mismo orden columna por
+  // columna en que se renderiza; el hook solo cuenta por persona sobre ese recorrido, no
+  // reordena nada por su cuenta. Mismo hook compartido que usa la columna Nivel 2 del
+  // Tablero general.
+  const ticketsEnOrdenVisual = useMemo(
+    () => columnas.flatMap(({ tickets }) => tickets),
+    [columnas],
+  )
+  const posicionPorTicket = useN2PositionBadges(ticketsEnOrdenVisual)
+  const getPositionBadge = (ticket: Ticket) => posicionPorTicket.get(ticket.id)
 
   // Cuando hay búsqueda activa, `columnas` ya son solo coincidencias (visibleTickets las
   // filtró) — el mismo orden columna-por-columna que se renderiza abajo.
