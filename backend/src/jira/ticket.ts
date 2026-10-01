@@ -42,4 +42,8 @@ export interface Ticket {
   // Campo "Country" de Jira (customfield_10081) — REQUIREMENTS.md §5 "Filtro de país
   // 'Ubicado en'". Ausente si el ticket no tiene el campo poblado en Jira.
   pais?: Pais
+  // Permalink de Slack del mensaje del caso, resuelto por slack/slackCache.ts (no viene
+  // de mapper.ts: se agrega en routes/jira.ts después de mapear). Ausente si Slack no
+  // está configurado, si el mensaje todavía no se encontró, o si la resolución falló.
+  slackUrl?: string
 }

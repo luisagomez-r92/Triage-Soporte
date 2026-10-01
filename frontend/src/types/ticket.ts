@@ -44,4 +44,8 @@ export interface Ticket {
   rank?: string
   // Campo "Country" de Jira — ausente si el ticket no lo tiene poblado.
   pais?: Pais
+  // Permalink del mensaje de Slack del caso (botón "Abrir en Slack", Kanban del
+  // Tablero). Ausente si Slack no está configurado o el mensaje no se encontró
+  // todavía — en ese caso el botón se muestra deshabilitado, nunca roto.
+  slackUrl?: string
 }

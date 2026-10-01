@@ -7,6 +7,7 @@ import {
   getIssueStatusCategory,
 } from '../jira/jiraClient'
 import { mapChangelogToHistory, mapJiraIssuesToTickets } from '../jira/mapper'
+import { getSlackUrl, resolveSlackUrls } from '../slack/slackCache'
 
 const router = Router()
 
@@ -40,12 +41,26 @@ router.get('/test', async (_req, res) => {
   try {
     const data = await getActiveBoardIssues()
     const { tickets, unmapped } = mapJiraIssuesToTickets(data.issues)
+
+    // Botón "Abrir en Slack": nunca debe tumbar esta respuesta ni demorarla más de lo
+    // razonable — resolveSlackUrls() ya atrapa sus propios errores, pero se envuelve acá
+    // también por defensa en profundidad (si Slack no está configurado, no hace nada).
+    try {
+      await resolveSlackUrls(tickets.map((t) => ({ id: t.id, creadoEn: t.creadoEn })))
+    } catch (error) {
+      console.error('Error inesperado resolviendo enlaces de Slack:', error)
+    }
+    const ticketsConSlack = tickets.map((ticket) => ({
+      ...ticket,
+      slackUrl: getSlackUrl(ticket.id),
+    }))
+
     res.json({
       ok: true,
       source: 'jira-agile-api',
       totalActivosEnJira: data.total,
       ticketsCount: tickets.length,
-      tickets,
+      tickets: ticketsConSlack,
       // Statuses que no están en el mapeo de mapper.ts — no deberían aparecer dado el
       // filtro por statusCategory, pero se listan aparte por si Jira agrega un status
       // nuevo al board sin actualizar el mapa.
