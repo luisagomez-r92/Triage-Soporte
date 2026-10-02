@@ -1,7 +1,6 @@
-import type { KeyboardEvent, MouseEvent } from 'react'
+import type { KeyboardEvent } from 'react'
 import Avatar from '../Avatar'
 import ProgressRing from '../ProgressRing'
-import SlackIcon from '../SlackIcon'
 import StatusChip from '../StatusChip'
 import TicketDetailPanel from '../TicketDetailPanel'
 import TicketValidationAlert from '../TicketValidationAlert'
@@ -47,15 +46,6 @@ function TicketCard({ ticket, matchState, detailTrigger, positionBadge }: Ticket
       event.preventDefault()
       detailTrigger.onOpenDetail(ticket)
     }
-  }
-
-  // Botón "Abrir en Slack": la tarjeta completa ya es clicable (abre el modal) en modo
-  // 'modal', así que hay que detener la propagación para que el clic en este botón no
-  // dispare también el onClick del <div> padre.
-  const handleAbrirEnSlack = (event: MouseEvent<HTMLButtonElement>) => {
-    event.stopPropagation()
-    if (!ticket.slackUrl) return
-    window.open(ticket.slackUrl, '_blank', 'noopener,noreferrer')
   }
 
   return (
@@ -108,34 +98,18 @@ function TicketCard({ ticket, matchState, detailTrigger, positionBadge }: Ticket
         ) : (
           <span />
         )}
-        <div className="flex flex-shrink-0 items-center gap-2">
+        {puedeVerDetalle && isModalTrigger && (
+          <span className="flex-shrink-0 text-xs font-medium text-accent">Ver detalle</span>
+        )}
+        {puedeVerDetalle && !isModalTrigger && (
           <button
             type="button"
-            title={ticket.slackUrl ? 'Abrir en Slack' : 'Sin mensaje en Slack todavía'}
-            aria-label="Abrir en Slack"
-            disabled={!ticket.slackUrl}
-            onClick={handleAbrirEnSlack}
-            className={`rounded p-1 ${
-              ticket.slackUrl
-                ? 'text-accent hover:bg-accent/10'
-                : 'cursor-not-allowed text-gray-300'
-            }`}
+            onClick={() => detailTrigger.onToggle()}
+            className="flex-shrink-0 text-xs font-medium text-accent hover:underline"
           >
-            <SlackIcon />
+            {detailTrigger.expanded ? 'Ocultar detalle' : 'Ver detalle'}
           </button>
-          {puedeVerDetalle && isModalTrigger && (
-            <span className="text-xs font-medium text-accent">Ver detalle</span>
-          )}
-          {puedeVerDetalle && !isModalTrigger && (
-            <button
-              type="button"
-              onClick={() => detailTrigger.onToggle()}
-              className="text-xs font-medium text-accent hover:underline"
-            >
-              {detailTrigger.expanded ? 'Ocultar detalle' : 'Ver detalle'}
-            </button>
-          )}
-        </div>
+        )}
       </div>
 
       {!isModalTrigger && puedeVerDetalle && detailTrigger.expanded && (

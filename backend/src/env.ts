@@ -31,21 +31,3 @@ export function getJiraConfig(): JiraConfig {
 
   return { baseUrl: baseUrl!, email: email!, apiToken: apiToken!, boardId: boardId! }
 }
-
-export interface SlackConfig {
-  botToken: string
-  channelId: string
-}
-
-// A diferencia de Jira, Slack es una funcionalidad adicional (botón "Abrir en Slack"), no
-// crítica para el funcionamiento del tablero — si falta la config, el botón simplemente
-// queda deshabilitado para todos los tickets (slackUrl: undefined), sin romper /test. Por
-// eso no lanza error: devuelve null en vez de un MissingSlackConfigError.
-export function getSlackConfig(): SlackConfig | null {
-  const botToken = process.env.SLACK_BOT_TOKEN
-  const channelId = process.env.SLACK_CHANNEL_ID
-
-  if (!botToken || !channelId) return null
-
-  return { botToken, channelId }
-}
