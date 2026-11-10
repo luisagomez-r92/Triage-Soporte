@@ -1,6 +1,7 @@
 import type { TicketStatus } from '../types/ticket'
 
 export const PROGRESS_BY_STATUS: Record<TicketStatus, number> = {
+  'Gestión de agente': 0,
   'En espera': 0,
   'En revisión N1': 30,
   'Pendiente cliente': 35,

@@ -1,4 +1,5 @@
 export type TicketStatus =
+  | 'Gestión de agente'
   | 'En espera'
   | 'En revisión N1'
   | 'Pendiente cliente'

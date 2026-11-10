@@ -42,6 +42,9 @@ export interface JiraIssue {
 // porque mapChangelogToHistory() (historial bajo demanda) usa el mismo mapa — una sola
 // fuente de verdad para "status de Jira -> estado de la app".
 export const ESTADO_BY_JIRA_STATUS: Record<string, TicketStatus> = {
+  // Nombre crudo confirmado contra tickets reales (sin tilde en "Gestion", "Agente" con
+  // mayúscula) — REQUIREMENTS.md §9 "Nuevo estado 'Gestión de agente'".
+  'Gestion de Agente': 'Gestión de agente',
   'Esperando por ayuda': 'En espera',
   'Gestión Nivel 1': 'En revisión N1',
   'Escalado Nivel 2': 'Escalado a N2',

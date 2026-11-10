@@ -1,6 +1,9 @@
 import type { TicketStatus } from '../types/ticket'
 
 const SOLID_STYLES: Record<TicketStatus, string> = {
+  // Distinto color que "En espera" a propósito: conviven en la misma columna del Tablero
+  // general (Nivel 0) y el chip es la única forma de distinguirlos (REQUIREMENTS.md §4).
+  'Gestión de agente': 'bg-purple-50 text-purple-600',
   'En espera': 'bg-accent/10 text-accent',
   'En revisión N1': 'bg-navy/10 text-navy',
   'Pendiente cliente': 'bg-naranja/10 text-naranja',
@@ -12,6 +15,7 @@ const SOLID_STYLES: Record<TicketStatus, string> = {
 }
 
 const DOT_COLOR: Record<TicketStatus, string> = {
+  'Gestión de agente': 'bg-purple-500',
   'En espera': 'bg-accent',
   'En revisión N1': 'bg-navy',
   'Pendiente cliente': 'bg-naranja',

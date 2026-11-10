@@ -40,6 +40,17 @@ router.get('/test', async (_req, res) => {
   try {
     const data = await getActiveBoardIssues()
     const { tickets, unmapped } = mapJiraIssuesToTickets(data.issues)
+
+    // Aviso en consola si Jira trae un status activo que mapper.ts todavía no conoce —
+    // esos tickets se excluyen de `tickets` (ver unmapped más abajo) en vez de romper el
+    // endpoint, pero sin este log el problema pasaría desapercibido en producción.
+    if (unmapped.length > 0) {
+      console.warn(
+        `Jira devolvió ${unmapped.length} ticket(s) con status sin mapear en mapper.ts:`,
+        unmapped,
+      )
+    }
+
     res.json({
       ok: true,
       source: 'jira-agile-api',

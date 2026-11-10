@@ -29,6 +29,10 @@ function TriageDeSoporte({
   lastUpdatedAt,
   refetch,
 }: TriageDeSoporteProps) {
+  const n0GestionAgente = tickets
+    .filter((ticket) => ticket.estado === 'Gestión de agente')
+    .sort((a, b) => getAsignacionKey(a) - getAsignacionKey(b))
+
   const n1EnGestion = tickets
     .filter((ticket) => ticket.estado === 'En revisión N1')
     .sort((a, b) => getAsignacionKey(a) - getAsignacionKey(b))
@@ -75,12 +79,20 @@ function TriageDeSoporte({
       {!loading && !error && (
         <div className="flex flex-col gap-4">
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <AgentActivityPanel
-              title="Nivel 1 · En Gestión"
-              tickets={n1EnGestion}
-              showPriority={false}
-              emptyMessage="Nadie en gestión en este momento"
-            />
+            <div className="flex flex-col gap-4">
+              <AgentActivityPanel
+                title="Nivel 0 · Gestión de agente"
+                tickets={n0GestionAgente}
+                showPriority={false}
+                emptyMessage="Sin casos en gestión de agente"
+              />
+              <AgentActivityPanel
+                title="Nivel 1 · En Gestión"
+                tickets={n1EnGestion}
+                showPriority={false}
+                emptyMessage="Nadie en gestión en este momento"
+              />
+            </div>
             <AgentActivityPanel
               title="Nivel 2 · En Curso"
               tickets={n2EnCurso}

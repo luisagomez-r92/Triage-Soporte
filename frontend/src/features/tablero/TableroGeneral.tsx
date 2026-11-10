@@ -12,8 +12,19 @@ import { useSearchResultNavigation } from '../../hooks/useSearchResultNavigation
 import { useTicketSearchMessage } from '../../hooks/useTicketSearchMessage'
 import type { PaisFiltro, Ticket, TicketStatus } from '../../types/ticket'
 
-const COLUMNS: { title: string; estados: TicketStatus[] }[] = [
-  { title: 'Nivel 0 – Nuevos', estados: ['En espera'] },
+// FIFO estricto por hora de llegada (REQUIREMENTS.md §4, columna "Nivel 0 – Gestión de
+// agente"): a diferencia de las demás columnas, acá los dos estados se mezclan por
+// `creadoEn`, no se agrupan por bucket de estado.
+function compararPorLlegada(a: Ticket, b: Ticket): number {
+  return new Date(a.creadoEn).getTime() - new Date(b.creadoEn).getTime()
+}
+
+const COLUMNS: { title: string; estados: TicketStatus[]; sortBy?: (a: Ticket, b: Ticket) => number }[] = [
+  {
+    title: 'Nivel 0 – Gestión de agente',
+    estados: ['Gestión de agente', 'En espera'],
+    sortBy: compararPorLlegada,
+  },
   { title: 'Nivel 1 – Revisión', estados: ['En revisión N1', 'En validación'] },
   { title: 'Nivel 2 – Especialistas', estados: ['En curso N2', 'Escalado a N2', 'Pendiente Tech'] },
   { title: 'Pendiente cliente', estados: ['Pendiente cliente'] },
@@ -23,14 +34,18 @@ function getColumnTitle(estado: TicketStatus): string {
   return COLUMNS.find((column) => column.estados.includes(estado))?.title ?? ''
 }
 
-function getTicketsForColumn(tickets: Ticket[], estados: TicketStatus[]) {
-  // Ordena por la posición del estado dentro de `estados` (ej. en Nivel 2, "En curso
-  // N2" antes que "Escalado a N2") para que el ticket en curso nunca caiga dentro del
-  // colapso de la cola. El orden fino dentro de cada estado (prioridad/Rank de Jira
-  // dentro de la cola) llega con WebSocket/polling — ver REQUIREMENTS.md §6 y §9.
-  return tickets.filter((ticket) => estados.includes(ticket.estado)).sort(
-    (a, b) => estados.indexOf(a.estado) - estados.indexOf(b.estado),
-  )
+function getTicketsForColumn(
+  tickets: Ticket[],
+  estados: TicketStatus[],
+  sortBy?: (a: Ticket, b: Ticket) => number,
+) {
+  // Por defecto, ordena por la posición del estado dentro de `estados` (ej. en Nivel 2,
+  // "En curso N2" antes que "Escalado a N2") para que el ticket en curso nunca caiga
+  // dentro del colapso de la cola. El orden fino dentro de cada estado (prioridad/Rank de
+  // Jira dentro de la cola) llega con WebSocket/polling — ver REQUIREMENTS.md §6 y §9.
+  // `sortBy` permite un criterio distinto por columna (ej. FIFO mezclado en Nivel 0).
+  const comparador = sortBy ?? ((a: Ticket, b: Ticket) => estados.indexOf(a.estado) - estados.indexOf(b.estado))
+  return tickets.filter((ticket) => estados.includes(ticket.estado)).sort(comparador)
 }
 
 interface TableroGeneralProps {
@@ -74,8 +89,8 @@ function TableroGeneral({ tickets, pais, onPaisChange }: TableroGeneralProps) {
   // resultados de búsqueda".
   const orderedMatchedIds = useMemo(() => {
     if (!matchedIds) return []
-    return COLUMNS.flatMap(({ estados }) =>
-      getTicketsForColumn(ticketsPais, estados).filter((ticket) => matchedIds.has(ticket.id)),
+    return COLUMNS.flatMap(({ estados, sortBy }) =>
+      getTicketsForColumn(ticketsPais, estados, sortBy).filter((ticket) => matchedIds.has(ticket.id)),
     ).map((ticket) => ticket.id)
   }, [matchedIds, ticketsPais])
 
@@ -109,11 +124,11 @@ function TableroGeneral({ tickets, pais, onPaisChange }: TableroGeneralProps) {
         </div>
       )}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {COLUMNS.map(({ title, estados }) => (
+        {COLUMNS.map(({ title, estados, sortBy }) => (
           <BoardColumn
             key={title}
             title={title}
-            tickets={getTicketsForColumn(ticketsPais, estados)}
+            tickets={getTicketsForColumn(ticketsPais, estados, sortBy)}
             matchedIds={matchedIds}
             onTicketClick={setSelectedTicket}
             getPositionBadge={getPositionBadge}
