@@ -19,6 +19,9 @@ frontend/dist/
 frontend/build/
 .npm
 
+# Certificados locales (ej. interceptación TLS corporativa) — nunca deben viajar al repo
+backend/certs/
+
 # Docker
 *.log
 
